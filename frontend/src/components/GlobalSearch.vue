@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import LeadsIcon from '~icons/lucide/target'
+import LeadsIcon from '@/components/Icons/LeadsCustomerIcon.vue'
 import DealsIcon from '~icons/lucide/circle-dollar-sign'
 import ContactsIcon from '~icons/lucide/contact'
 import OrganizationsIcon from '~icons/lucide/building-2'

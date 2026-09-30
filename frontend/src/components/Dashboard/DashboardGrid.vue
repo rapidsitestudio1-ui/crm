@@ -2,7 +2,7 @@
   <div class="flex-1 overflow-y-auto p-3">
     <!-- Outside edit mode, number charts render as one connected KPI strip
          (Figma "KPI Card" row) above the grid, in layout order. -->
-    <div v-if="!editing && kpiItems.length" class="px-2 pb-[23px] pt-2.5">
+    <div v-if="!editing && kpiItems.length" class="px-2 pb-8 pt-2.5">
       <KpiStrip :items="kpiItems" />
     </div>
     <GridLayout

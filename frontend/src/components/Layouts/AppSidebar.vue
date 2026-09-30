@@ -34,7 +34,7 @@
           >
             <template #prefix>
               <span class="relative grid size-4 place-items-center">
-                <LucideBell class="size-4 text-ink-gray-7" />
+                <LucideBell class="size-[16.5px] text-ink-gray-7" />
                 <span
                   v-if="isCollapsed && unreadNotificationsCount"
                   class="absolute -right-1 -top-1 size-1.5 rounded-full bg-surface-gray-9 ring-1 ring-[var(--surface-gray-1)]"
@@ -87,7 +87,7 @@
                 @click="link.onClick ? link.onClick() : selectItem($event, link.key)"
               >
                 <template #prefix>
-                  <Icon :icon="link.icon" class="size-4 text-ink-gray-7" />
+                  <Icon :icon="link.icon" class="size-[16.5px] text-ink-gray-7" />
                 </template>
                 <Tooltip
                   :text="__(link.label)"
@@ -135,7 +135,7 @@
             @click="toggleHelpModal"
           >
             <template #prefix>
-              <HelpIcon class="size-4 text-ink-gray-7" />
+              <HelpIcon class="size-[16.5px] text-ink-gray-7" />
             </template>
           </SidebarItem>
           <SidebarItem
@@ -144,7 +144,7 @@
           >
             <template #prefix>
               <CollapseSidebar
-                class="size-4 text-ink-gray-7 duration-300 ease-in-out"
+                class="size-[16.5px] text-ink-gray-7 duration-300 ease-in-out"
                 :class="{ '[transform:rotateY(180deg)]': isCollapsed }"
               />
             </template>
@@ -179,7 +179,7 @@
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
 // Sidebar navigation icons from the CRM Design System (Figma "Icons" page).
 import LucideLayoutGrid from '~icons/lucide/layout-grid'
-import LucideTarget from '~icons/lucide/target'
+import LeadsCustomerIcon from '@/components/Icons/LeadsCustomerIcon.vue'
 import LucideCircleDollarSign from '~icons/lucide/circle-dollar-sign'
 import LucideContact from '~icons/lucide/contact'
 import LucideBuilding2 from '~icons/lucide/building-2'
@@ -270,7 +270,7 @@ const links = [
   },
   {
     label: 'Leads',
-    icon: LucideTarget,
+    icon: LeadsCustomerIcon,
     to: 'Leads',
   },
   {
@@ -377,7 +377,7 @@ function getIcon(routeName, icon) {
 
   switch (routeName) {
     case 'Leads':
-      return LucideTarget
+      return LeadsCustomerIcon
     case 'Deals':
       return LucideCircleDollarSign
     case 'Contacts':
