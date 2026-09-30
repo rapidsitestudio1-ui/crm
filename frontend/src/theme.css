@@ -1,0 +1,185 @@
+/*
+ * Custom theme: clean & minimal (Linear-style).
+ *
+ * Everything here overrides frappe-ui's design tokens (CSS variables) or targets
+ * stable hooks (data-slot / data-state), so no component files are edited.
+ * That keeps upstream merges conflict-free. To undo the theme, remove the
+ * `@import './theme.css'` line from index.css.
+ *
+ * Palette: cool neutral grays (hue 270, very low chroma) + one indigo accent.
+ */
+
+/* Shared by both modes. The --accent-* values these point at differ per mode. */
+:root {
+  --accent-fg: oklch(1 0 0);
+
+  /* ---- Blue tokens (links, checkboxes, selections) follow the accent ---- */
+  --surface-blue-1: var(--accent-1);
+  --surface-blue-2: var(--accent-2);
+  --surface-blue-3: var(--accent-3);
+  --ink-blue-5: var(--accent-6);
+  --ink-blue-6: var(--accent-6);
+  --ink-blue-7: var(--accent-7);
+  --ink-blue-8: var(--accent-8);
+  --ink-blue-link: var(--accent-6);
+  --outline-blue-1: var(--accent-2);
+  --outline-blue-2: var(--accent-3);
+  --outline-blue-3: var(--accent-5);
+
+  /* ---- Corners: tighter ---- */
+  --radius-4: 6px; /* rounded (buttons, inputs) */
+  --radius-5: 8px; /* rounded-md */
+  --radius-6: 10px; /* rounded-lg (cards, dialogs) */
+  --radius-7: 12px; /* rounded-xl */
+}
+
+/* Light mode only. A bare :root here would have the same specificity as
+   frappe-ui's [data-theme='dark'] block and, coming later, would clobber it. */
+:root:not([data-theme='dark']) {
+  /* ---- Accent (indigo) ---- */
+  --accent-1: oklch(0.975 0.012 277);
+  --accent-2: oklch(0.955 0.024 277);
+  --accent-3: oklch(0.915 0.045 277);
+  --accent-5: oklch(0.7 0.13 277);
+  --accent-6: oklch(0.56 0.19 277);
+  --accent-7: oklch(0.51 0.19 277);
+  --accent-8: oklch(0.46 0.18 277);
+
+  /* ---- Surfaces: cool, barely-tinted grays ---- */
+  --surface-base: oklch(1 0 0);
+  --surface-gray-1: oklch(0.983 0.002 270);
+  --surface-gray-2: oklch(0.968 0.003 270);
+  --surface-gray-3: oklch(0.95 0.004 270);
+  --surface-gray-4: oklch(0.918 0.005 270);
+  --surface-gray-5: oklch(0.84 0.006 270);
+  --surface-gray-6: oklch(0.69 0.01 270);
+  --surface-gray-7: oklch(0.59 0.012 270);
+  --surface-gray-8: oklch(0.44 0.014 270);
+  --surface-gray-9: oklch(0.34 0.014 270);
+  --surface-gray-10: oklch(0.21 0.012 270);
+
+  /* ---- Text ---- */
+  --ink-gray-1: oklch(0.945 0.003 270);
+  --ink-gray-2: oklch(0.91 0.004 270);
+  --ink-gray-3: oklch(0.83 0.006 270);
+  --ink-gray-4: oklch(0.68 0.01 270);
+  --ink-gray-5: oklch(0.58 0.012 270);
+  --ink-gray-6: oklch(0.47 0.014 270);
+  --ink-gray-7: oklch(0.36 0.014 270);
+  --ink-gray-8: oklch(0.23 0.012 270);
+  --ink-gray-9: oklch(0.17 0.01 270);
+
+  /* ---- Borders: slightly crisper than default ---- */
+  --outline-gray-1: oklch(0.932 0.004 270);
+  --outline-gray-2: oklch(0.9 0.005 270);
+  --outline-gray-3: oklch(0.83 0.006 270);
+  --outline-gray-4: oklch(0.69 0.01 270);
+  --outline-gray-5: oklch(0.59 0.012 270);
+  --outline-elevation-1: oklch(0.932 0.004 270);
+  --outline-elevation-2: oklch(0.932 0.004 270);
+
+  /* ---- Focus ring: indigo ---- */
+  --focus-outline-default: 2px solid oklch(0.56 0.19 277 / 0.45);
+  --focus-outline-blue: 2px solid oklch(0.56 0.19 277 / 0.45);
+
+  /* ---- Shadows: hairline ring + soft, low drop ---- */
+  --elevation-sm: 0 0 0 1px oklch(0.2 0.02 270 / 0.06),
+    0 1px 2px oklch(0.2 0.02 270 / 0.05);
+  --elevation-base: 0 0 0 1px oklch(0.2 0.02 270 / 0.07),
+    0 1px 3px oklch(0.2 0.02 270 / 0.07);
+  --elevation-md: 0 0 0 1px oklch(0.2 0.02 270 / 0.07),
+    0 4px 12px -2px oklch(0.2 0.02 270 / 0.1);
+  --elevation-lg: 0 0 0 1px oklch(0.2 0.02 270 / 0.07),
+    0 12px 28px -8px oklch(0.2 0.02 270 / 0.16);
+  --elevation-xl: 0 0 0 1px oklch(0.2 0.02 270 / 0.08),
+    0 20px 40px -12px oklch(0.2 0.02 270 / 0.2);
+  --elevation-2xl: 0 0 0 1px oklch(0.2 0.02 270 / 0.08),
+    0 32px 64px -16px oklch(0.2 0.02 270 / 0.24);
+}
+
+[data-theme='dark'] {
+  --accent-1: oklch(0.24 0.04 277);
+  --accent-2: oklch(0.28 0.06 277);
+  --accent-3: oklch(0.33 0.08 277);
+  --accent-5: oklch(0.55 0.15 277);
+  --accent-6: oklch(0.66 0.16 277);
+  --accent-7: oklch(0.61 0.17 277);
+  --accent-8: oklch(0.56 0.17 277);
+
+  --surface-base: oklch(0.185 0.006 270);
+  --surface-gray-1: oklch(0.205 0.006 270);
+  --surface-gray-2: oklch(0.245 0.007 270);
+  --surface-gray-3: oklch(0.29 0.008 270);
+  --surface-gray-4: oklch(0.34 0.008 270);
+  --surface-elevation-1: oklch(0.215 0.006 270);
+  --surface-elevation-2: oklch(0.235 0.007 270);
+  --surface-elevation-3: oklch(0.28 0.008 270);
+
+  --outline-gray-1: oklch(0.26 0.007 270);
+  --outline-gray-2: oklch(0.31 0.008 270);
+  --outline-elevation-1: oklch(0.27 0.007 270);
+  --outline-elevation-2: oklch(0.31 0.008 270);
+
+  --focus-outline-default: 2px solid oklch(0.66 0.16 277 / 0.5);
+  --focus-outline-blue: 2px solid oklch(0.66 0.16 277 / 0.5);
+
+  --elevation-sm: 0 0 0 1px oklch(1 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.4);
+  --elevation-base: 0 0 0 1px oklch(1 0 0 / 0.07), 0 1px 3px oklch(0 0 0 / 0.45);
+  --elevation-md: 0 0 0 1px oklch(1 0 0 / 0.07),
+    0 4px 12px -2px oklch(0 0 0 / 0.5);
+  --elevation-lg: 0 0 0 1px oklch(1 0 0 / 0.08),
+    0 12px 28px -8px oklch(0 0 0 / 0.55);
+  --elevation-xl: 0 0 0 1px oklch(1 0 0 / 0.08),
+    0 20px 40px -12px oklch(0 0 0 / 0.6);
+  --elevation-2xl: 0 0 0 1px oklch(1 0 0 / 0.09),
+    0 32px 64px -16px oklch(0 0 0 / 0.65);
+}
+
+/* ---- Primary buttons: indigo instead of near-black ----
+   frappe-ui's solid gray Button is the only element pairing these two classes
+   on a <button>; tooltips and pills that share the dark token are divs. */
+button.bg-surface-gray-10.text-ink-base {
+  background-color: var(--accent-6);
+  color: var(--accent-fg);
+}
+button.bg-surface-gray-10.text-ink-base:hover {
+  background-color: var(--accent-7);
+}
+button.bg-surface-gray-10.text-ink-base:active {
+  background-color: var(--accent-8);
+}
+
+/* ---- Sidebar: flat active row with an accent marker ---- */
+[data-slot='sidebar-item'] {
+  position: relative;
+}
+[data-slot='sidebar-item'][data-state='active'] {
+  background-color: var(--surface-gray-3);
+  box-shadow: none;
+  color: var(--ink-gray-9);
+  font-weight: 500;
+}
+[data-slot='sidebar-item'][data-state='active']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background-color: var(--accent-6);
+}
+
+/* ---- Checkboxes & radios pick up the accent ---- */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--accent-6);
+}
+.form-checkbox:checked {
+  background-color: var(--accent-6);
+}
+
+/* ---- Text selection ---- */
+::selection {
+  background-color: oklch(0.56 0.19 277 / 0.18);
+}
