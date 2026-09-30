@@ -83,7 +83,7 @@
                 :to="link.to"
                 :label="__(link.label)"
                 :active="activeItem === link.key"
-                @click="selectItem($event, link.key)"
+                @click="link.onClick ? link.onClick() : selectItem($event, link.key)"
               >
                 <template #prefix>
                   <Icon :icon="link.icon" class="size-4 text-ink-gray-7" />
@@ -186,6 +186,7 @@ import LucideStickyNote from '~icons/lucide/sticky-note'
 import LucideSquareCheckBig from '~icons/lucide/square-check-big'
 import LucidePhone from '~icons/lucide/phone'
 import LucideBell from '~icons/lucide/bell'
+import LucideZap from '~icons/lucide/zap'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
 import ConvertIcon from '@/components/Icons/ConvertIcon.vue'
@@ -301,6 +302,18 @@ const links = [
     icon: LucidePhone,
     to: 'Call Logs',
   },
+  {
+    // Not a route: opens Settings on the "Automation & Rules" section, which
+    // (like this entry) is only available to managers.
+    label: 'Automation',
+    icon: LucideZap,
+    key: 'Automation',
+    onClick: () => {
+      showSettings.value = true
+      activeSettingsPage.value = __('Assignment Rules') // Settings matches translated labels
+    },
+    condition: () => isManager(),
+  },
 ]
 
 const allViews = computed(() => {
@@ -319,8 +332,9 @@ const allViews = computed(() => {
         .map((link) => ({
           label: link.label,
           icon: link.icon,
-          key: link.to,
-          to: { name: link.to },
+          key: link.key || link.to,
+          to: link.to ? { name: link.to } : undefined,
+          onClick: link.onClick,
         })),
     },
   ]
