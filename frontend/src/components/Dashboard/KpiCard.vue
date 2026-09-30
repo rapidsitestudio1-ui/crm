@@ -28,8 +28,8 @@
               class="inline-flex items-center gap-0.5 rounded-full px-1.5 py-px text-xs-medium"
               :class="
                 isGood
-                  ? 'bg-surface-green-2 text-ink-green-6'
-                  : 'bg-surface-red-2 text-ink-red-8'
+                  ? 'bg-[var(--success-bg)] text-[color:var(--success-text)]'
+                  : 'bg-[var(--danger-bg)] text-[color:var(--danger-text)]'
               "
             >
               {{ config.delta >= 0 ? '↑' : '↓' }}

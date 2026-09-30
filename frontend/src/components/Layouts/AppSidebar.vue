@@ -34,7 +34,7 @@
           >
             <template #prefix>
               <span class="relative grid size-4 place-items-center">
-                <NotificationsIcon class="size-4 text-ink-gray-7" />
+                <LucideBell class="size-4 text-ink-gray-7" />
                 <span
                   v-if="isCollapsed && unreadNotificationsCount"
                   class="absolute -right-1 -top-1 size-1.5 rounded-full bg-surface-gray-9 ring-1 ring-[var(--surface-gray-1)]"
@@ -176,7 +176,16 @@
 
 <script setup>
 import BrushCleaningIcon from '~icons/lucide/brush-cleaning'
-import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
+// Sidebar navigation icons from the CRM Design System (Figma "Icons" page).
+import LucideLayoutGrid from '~icons/lucide/layout-grid'
+import LucideTarget from '~icons/lucide/target'
+import LucideCircleDollarSign from '~icons/lucide/circle-dollar-sign'
+import LucideContact from '~icons/lucide/contact'
+import LucideBuilding2 from '~icons/lucide/building-2'
+import LucideStickyNote from '~icons/lucide/sticky-note'
+import LucideSquareCheckBig from '~icons/lucide/square-check-big'
+import LucidePhone from '~icons/lucide/phone'
+import LucideBell from '~icons/lucide/bell'
 import CRMLogo from '@/components/Icons/CRMLogo.vue'
 import InviteIcon from '@/components/Icons/InviteIcon.vue'
 import ConvertIcon from '@/components/Icons/ConvertIcon.vue'
@@ -191,14 +200,9 @@ import GlobalSearch from '@/components/GlobalSearch.vue'
 import SquareAsterisk from '@/components/Icons/SquareAsterisk.vue'
 import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
 import WebsiteIcon from '@/components/Icons/WebsiteIcon.vue'
-import DealsIcon from '@/components/Icons/DealsIcon.vue'
-import ContactsIcon from '@/components/Icons/ContactsIcon.vue'
-import OrganizationsIcon from '@/components/Icons/OrganizationsIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import TaskIcon from '@/components/Icons/TaskIcon.vue'
-import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
 import CollapseSidebar from '@/components/Icons/CollapseSidebar.vue'
-import NotificationsIcon from '@/components/Icons/NotificationsIcon.vue'
 import HelpIcon from '@/components/Icons/HelpIcon.vue'
 import Notifications from '@/components/Notifications.vue'
 import Settings from '@/components/Settings/Settings.vue'
@@ -258,43 +262,43 @@ const isDemoSite = ref(window.is_demo_site)
 const links = [
   {
     label: 'Dashboard',
-    icon: LucideLayoutDashboard,
+    icon: LucideLayoutGrid,
     to: 'Dashboard',
     condition: () => !props.mobile,
   },
   {
     label: 'Leads',
-    icon: LeadsIcon,
+    icon: LucideTarget,
     to: 'Leads',
   },
   {
     label: 'Deals',
-    icon: DealsIcon,
+    icon: LucideCircleDollarSign,
     to: 'Deals',
   },
   {
     label: 'Contacts',
-    icon: ContactsIcon,
+    icon: LucideContact,
     to: 'Contacts',
   },
   {
     label: 'Organizations',
-    icon: OrganizationsIcon,
+    icon: LucideBuilding2,
     to: 'Organizations',
   },
   {
     label: 'Notes',
-    icon: NoteIcon,
+    icon: LucideStickyNote,
     to: 'Notes',
   },
   {
     label: 'Tasks',
-    icon: TaskIcon,
+    icon: LucideSquareCheckBig,
     to: 'Tasks',
   },
   {
     label: 'Call Logs',
-    icon: PhoneIcon,
+    icon: LucidePhone,
     to: 'Call Logs',
   },
 ]
@@ -358,17 +362,19 @@ function getIcon(routeName, icon) {
 
   switch (routeName) {
     case 'Leads':
-      return LeadsIcon
+      return LucideTarget
     case 'Deals':
-      return DealsIcon
+      return LucideCircleDollarSign
     case 'Contacts':
-      return ContactsIcon
+      return LucideContact
     case 'Organizations':
-      return OrganizationsIcon
+      return LucideBuilding2
     case 'Notes':
-      return NoteIcon
+      return LucideStickyNote
+    case 'Tasks':
+      return LucideSquareCheckBig
     case 'Call Logs':
-      return PhoneIcon
+      return LucidePhone
     default:
       return PinIcon
   }

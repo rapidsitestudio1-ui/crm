@@ -86,10 +86,10 @@
 </template>
 
 <script setup>
-import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
-import DealsIcon from '@/components/Icons/DealsIcon.vue'
-import ContactsIcon from '@/components/Icons/ContactsIcon.vue'
-import OrganizationsIcon from '@/components/Icons/OrganizationsIcon.vue'
+import LeadsIcon from '~icons/lucide/target'
+import DealsIcon from '~icons/lucide/circle-dollar-sign'
+import ContactsIcon from '~icons/lucide/contact'
+import OrganizationsIcon from '~icons/lucide/building-2'
 import { call, Dialog, LoadingIndicator, Tooltip } from 'frappe-ui'
 import { watchDebounced } from '@vueuse/core'
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'

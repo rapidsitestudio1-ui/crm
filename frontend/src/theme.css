@@ -20,15 +20,16 @@
 :root {
   --accent-fg: oklch(1 0 0);
 
-  /* Blue tokens (links, checkboxes, selections) follow the brand accent */
+  /* Blue tokens (links, checkboxes, selections) follow the brand accent.
+     Text uses --accent-text (AA on white and coral tints); fills use --accent-6. */
   --surface-blue-1: var(--accent-1);
   --surface-blue-2: var(--accent-2);
   --surface-blue-3: var(--accent-3);
   --ink-blue-5: var(--accent-6);
-  --ink-blue-6: var(--accent-6);
-  --ink-blue-7: var(--accent-7);
-  --ink-blue-8: var(--accent-8);
-  --ink-blue-link: var(--accent-6);
+  --ink-blue-6: var(--accent-text);
+  --ink-blue-7: var(--accent-text);
+  --ink-blue-8: var(--accent-text);
+  --ink-blue-link: var(--accent-text);
   --outline-blue-1: var(--accent-2);
   --outline-blue-2: var(--accent-3);
   --outline-blue-3: var(--accent-5);
@@ -46,6 +47,19 @@
   --accent-6: #ff5316; /* coral/600 */
   --accent-7: #e6420a; /* coral/700 */
   --accent-8: #b83508; /* coral/800 */
+  --accent-text: #b83508; /* color/text/brand = coral/800: 4.95:1 on coral/100 */
+
+  /* Trend pills (color/text/success|danger on *-subtle): 4.58 / 5.55:1 */
+  --success-bg: #eaf8ef;
+  --success-text: #15803d;
+  --danger-bg: #fdedf0;
+  --danger-text: #be123c;
+
+  /* frappe-ui's amber badge text (ink-amber-8 on surface-amber-2) is 3.55:1;
+     amber-800 brings it to ~6.5:1. */
+  --ink-amber-8: #92400e;
+  /* Required-field asterisk (ink-red-5) was 2.16:1; red/700 is ~6.5:1. */
+  --ink-red-5: #be123c;
 
   /* ---- Surfaces ---- */
   --surface-base: #ffffff;
@@ -60,13 +74,14 @@
   --surface-gray-9: #333333;
   --surface-gray-10: #111111;
 
-  /* ---- Text ---- */
+  /* ---- Text (WCAG AA: every step from 4 up is >= 4.5:1 on white, canvas
+     and bg/subtle; ink-gray-4 = color/text/tertiary, gray/550) ---- */
   --ink-gray-1: #eeeeee;
   --ink-gray-2: #e8e8e8;
   --ink-gray-3: #d9d9d9;
-  --ink-gray-4: #9a9a9a;
-  --ink-gray-5: #737373;
-  --ink-gray-6: #5c5c5c;
+  --ink-gray-4: #6b6b6b;
+  --ink-gray-5: #5e5e5e;
+  --ink-gray-6: #525252;
   --ink-gray-7: #333333;
   --ink-gray-8: #1c1c1c;
   --ink-gray-9: #111111;
@@ -117,6 +132,20 @@
   --accent-6: #ff6a33; /* coral/500: brighter on dark */
   --accent-7: #ff8a5c;
   --accent-8: #ffb799;
+  --accent-text: #ff8a5c;
+
+  /* frappe-ui's dark ink-gray-4/5 are 3.4-4.2:1 on dark surfaces; lift them so
+     every step from 4 up is >= 4.5:1 on surface-base..surface-gray-3. */
+  --ink-gray-4: #adadad;
+  --ink-gray-5: #b8b8b8;
+  --ink-gray-6: #c4c4c4;
+  --ink-gray-7: #d1d1d1;
+  --ink-red-5: #fb7185;
+
+  --success-bg: rgb(34 197 94 / 0.14);
+  --success-text: #4ade80;
+  --danger-bg: rgb(244 63 94 / 0.14);
+  --danger-text: #fb7185;
 
   --chart-1: #ff6a33;
   --chart-2: #e8e8e8;
