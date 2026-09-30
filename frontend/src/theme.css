@@ -1,19 +1,26 @@
 /*
- * Custom theme: clean & minimal (Linear-style).
+ * Custom theme: "CRM Design System" (Figma file MbTNzPJWfUzOJadofKyYZY).
+ * Neutral grays, near-black primary actions, one coral accent.
  *
  * Everything here overrides frappe-ui's design tokens (CSS variables) or targets
- * stable hooks (data-slot / data-state), so no component files are edited.
- * That keeps upstream merges conflict-free. To undo the theme, remove the
- * `@import './theme.css'` line from index.css.
+ * stable hooks (data-slot / data-state / unique utility combos), so no
+ * component files are edited and upstream merges stay conflict-free.
+ * To undo the theme, remove the `@import './theme.css'` line from index.css.
  *
- * Palette: cool neutral grays (hue 270, very low chroma) + one indigo accent.
+ * Figma token -> CSS mapping (light):
+ *   color/bg/canvas #F8F8F8   -> --surface-gray-1 (sidebar)
+ *   color/bg/surface #FFFFFF  -> --surface-base (content, cards)
+ *   color/bg/inverse #111111  -> --surface-gray-10 (primary buttons)
+ *   color/text/secondary      -> --ink-gray-5..6,  text/tertiary -> --ink-gray-4
+ *   color/border/default      -> --outline-gray-1
+ *   coral/*                   -> --accent-*  (swap these to rebrand)
  */
 
 /* Shared by both modes. The --accent-* values these point at differ per mode. */
 :root {
   --accent-fg: oklch(1 0 0);
 
-  /* ---- Blue tokens (links, checkboxes, selections) follow the accent ---- */
+  /* Blue tokens (links, checkboxes, selections) follow the brand accent */
   --surface-blue-1: var(--accent-1);
   --surface-blue-2: var(--accent-2);
   --surface-blue-3: var(--accent-3);
@@ -25,149 +32,163 @@
   --outline-blue-1: var(--accent-2);
   --outline-blue-2: var(--accent-3);
   --outline-blue-3: var(--accent-5);
-
-  /* ---- Corners: tighter ---- */
-  --radius-4: 6px; /* rounded (buttons, inputs) */
-  --radius-5: 8px; /* rounded-md */
-  --radius-6: 10px; /* rounded-lg (cards, dialogs) */
-  --radius-7: 12px; /* rounded-xl */
 }
 
 /* Light mode only. A bare :root here would have the same specificity as
    frappe-ui's [data-theme='dark'] block and, coming later, would clobber it. */
 :root:not([data-theme='dark']) {
-  /* ---- Accent (indigo) ---- */
-  --accent-1: oklch(0.975 0.012 277);
-  --accent-2: oklch(0.955 0.024 277);
-  --accent-3: oklch(0.915 0.045 277);
-  --accent-5: oklch(0.7 0.13 277);
-  --accent-6: oklch(0.56 0.19 277);
-  --accent-7: oklch(0.51 0.19 277);
-  --accent-8: oklch(0.46 0.18 277);
+  /* ---- Brand accent: coral ---- */
+  --accent-1: #fff4ef; /* coral/50  */
+  --accent-2: #ffe6db; /* coral/100 */
+  --accent-3: #ffd2bf; /* coral/200 */
+  --accent-4: #ffb799; /* coral/300 */
+  --accent-5: #ff9366; /* coral/400 */
+  --accent-6: #ff5316; /* coral/600 */
+  --accent-7: #e6420a; /* coral/700 */
+  --accent-8: #b83508; /* coral/800 */
 
-  /* ---- Surfaces: cool, barely-tinted grays ---- */
-  --surface-base: oklch(1 0 0);
-  --surface-gray-1: oklch(0.983 0.002 270);
-  --surface-gray-2: oklch(0.968 0.003 270);
-  --surface-gray-3: oklch(0.95 0.004 270);
-  --surface-gray-4: oklch(0.918 0.005 270);
-  --surface-gray-5: oklch(0.84 0.006 270);
-  --surface-gray-6: oklch(0.69 0.01 270);
-  --surface-gray-7: oklch(0.59 0.012 270);
-  --surface-gray-8: oklch(0.44 0.014 270);
-  --surface-gray-9: oklch(0.34 0.014 270);
-  --surface-gray-10: oklch(0.21 0.012 270);
+  /* ---- Surfaces ---- */
+  --surface-base: #ffffff;
+  --surface-gray-1: #f8f8f8;
+  --surface-gray-2: #f3f3f3;
+  --surface-gray-3: #eeeeee;
+  --surface-gray-4: #e8e8e8;
+  --surface-gray-5: #d9d9d9;
+  --surface-gray-6: #bdbdbd;
+  --surface-gray-7: #9a9a9a;
+  --surface-gray-8: #525252;
+  --surface-gray-9: #333333;
+  --surface-gray-10: #111111;
 
   /* ---- Text ---- */
-  --ink-gray-1: oklch(0.945 0.003 270);
-  --ink-gray-2: oklch(0.91 0.004 270);
-  --ink-gray-3: oklch(0.83 0.006 270);
-  --ink-gray-4: oklch(0.68 0.01 270);
-  --ink-gray-5: oklch(0.58 0.012 270);
-  --ink-gray-6: oklch(0.47 0.014 270);
-  --ink-gray-7: oklch(0.36 0.014 270);
-  --ink-gray-8: oklch(0.23 0.012 270);
-  --ink-gray-9: oklch(0.17 0.01 270);
+  --ink-gray-1: #eeeeee;
+  --ink-gray-2: #e8e8e8;
+  --ink-gray-3: #d9d9d9;
+  --ink-gray-4: #9a9a9a;
+  --ink-gray-5: #737373;
+  --ink-gray-6: #5c5c5c;
+  --ink-gray-7: #333333;
+  --ink-gray-8: #1c1c1c;
+  --ink-gray-9: #111111;
 
-  /* ---- Borders: slightly crisper than default ---- */
-  --outline-gray-1: oklch(0.932 0.004 270);
-  --outline-gray-2: oklch(0.9 0.005 270);
-  --outline-gray-3: oklch(0.83 0.006 270);
-  --outline-gray-4: oklch(0.69 0.01 270);
-  --outline-gray-5: oklch(0.59 0.012 270);
-  --outline-elevation-1: oklch(0.932 0.004 270);
-  --outline-elevation-2: oklch(0.932 0.004 270);
+  /* ---- Borders ---- */
+  --outline-gray-1: #e8e8e8;
+  --outline-gray-2: #d9d9d9;
+  --outline-gray-3: #bdbdbd;
+  --outline-gray-4: #9a9a9a;
+  --outline-gray-5: #737373;
+  --outline-elevation-1: #e8e8e8;
+  --outline-elevation-2: #e8e8e8;
 
-  /* ---- Focus ring: indigo ---- */
-  --focus-outline-default: 2px solid oklch(0.56 0.19 277 / 0.45);
-  --focus-outline-blue: 2px solid oklch(0.56 0.19 277 / 0.45);
+  /* ---- Chart palette (Figma color/data/*), read by DashboardItem.vue.
+     Hex only: ECharts can't parse oklch(). ---- */
+  --chart-1: #ff5316;
+  --chart-2: #1c1c1c;
+  --chart-3: #ffb799;
+  --chart-4: #9a9a9a;
+  --chart-5: #b83508;
+  --chart-6: #ffd2bf;
 
-  /* ---- Shadows: hairline ring + soft, low drop ---- */
-  --elevation-sm: 0 0 0 1px oklch(0.2 0.02 270 / 0.06),
-    0 1px 2px oklch(0.2 0.02 270 / 0.05);
-  --elevation-base: 0 0 0 1px oklch(0.2 0.02 270 / 0.07),
-    0 1px 3px oklch(0.2 0.02 270 / 0.07);
-  --elevation-md: 0 0 0 1px oklch(0.2 0.02 270 / 0.07),
-    0 4px 12px -2px oklch(0.2 0.02 270 / 0.1);
-  --elevation-lg: 0 0 0 1px oklch(0.2 0.02 270 / 0.07),
-    0 12px 28px -8px oklch(0.2 0.02 270 / 0.16);
-  --elevation-xl: 0 0 0 1px oklch(0.2 0.02 270 / 0.08),
-    0 20px 40px -12px oklch(0.2 0.02 270 / 0.2);
-  --elevation-2xl: 0 0 0 1px oklch(0.2 0.02 270 / 0.08),
-    0 32px 64px -16px oklch(0.2 0.02 270 / 0.24);
+  /* ---- Focus ring: coral/300 ---- */
+  --focus-outline-default: 2px solid #ffb799;
+  --focus-outline-blue: 2px solid #ffb799;
+
+  /* ---- Shadows (Figma Shadow/XS..LG). `shadow` (base) = card: hairline + XS ---- */
+  --elevation-sm: 0 1px 2px rgb(17 17 17 / 0.06), 0 1px 3px rgb(17 17 17 / 0.04);
+  --elevation-base: 0 0 0 1px #e8e8e8, 0 1px 2px rgb(17 17 17 / 0.04);
+  --elevation-md: 0 0 0 1px rgb(17 17 17 / 0.06),
+    0 4px 12px -2px rgb(17 17 17 / 0.08), 0 2px 4px -1px rgb(17 17 17 / 0.04);
+  --elevation-lg: 0 0 0 1px rgb(17 17 17 / 0.06),
+    0 12px 24px -6px rgb(17 17 17 / 0.16), 0 4px 8px -2px rgb(17 17 17 / 0.06);
+  --elevation-xl: 0 0 0 1px rgb(17 17 17 / 0.06),
+    0 20px 40px -12px rgb(17 17 17 / 0.18), 0 4px 8px -2px rgb(17 17 17 / 0.06);
+  --elevation-2xl: 0 0 0 1px rgb(17 17 17 / 0.06),
+    0 32px 64px -16px rgb(17 17 17 / 0.22), 0 4px 8px -2px rgb(17 17 17 / 0.06);
 }
 
+/* Dark mode keeps frappe-ui's neutral dark grays; only the accent and card
+   edges change. */
 [data-theme='dark'] {
-  --accent-1: oklch(0.24 0.04 277);
-  --accent-2: oklch(0.28 0.06 277);
-  --accent-3: oklch(0.33 0.08 277);
-  --accent-5: oklch(0.55 0.15 277);
-  --accent-6: oklch(0.66 0.16 277);
-  --accent-7: oklch(0.61 0.17 277);
-  --accent-8: oklch(0.56 0.17 277);
+  --accent-1: #2a1a14;
+  --accent-2: #3a2016;
+  --accent-3: #55291a;
+  --accent-4: #8a3a1c;
+  --accent-5: #c2522a;
+  --accent-6: #ff6a33; /* coral/500: brighter on dark */
+  --accent-7: #ff8a5c;
+  --accent-8: #ffb799;
 
-  --surface-base: oklch(0.185 0.006 270);
-  --surface-gray-1: oklch(0.205 0.006 270);
-  --surface-gray-2: oklch(0.245 0.007 270);
-  --surface-gray-3: oklch(0.29 0.008 270);
-  --surface-gray-4: oklch(0.34 0.008 270);
-  --surface-elevation-1: oklch(0.215 0.006 270);
-  --surface-elevation-2: oklch(0.235 0.007 270);
-  --surface-elevation-3: oklch(0.28 0.008 270);
+  --chart-1: #ff6a33;
+  --chart-2: #e8e8e8;
+  --chart-3: #c2522a;
+  --chart-4: #8a8a8a;
+  --chart-5: #ffb799;
+  --chart-6: #55291a;
 
-  --outline-gray-1: oklch(0.26 0.007 270);
-  --outline-gray-2: oklch(0.31 0.008 270);
-  --outline-elevation-1: oklch(0.27 0.007 270);
-  --outline-elevation-2: oklch(0.31 0.008 270);
+  --focus-outline-default: 2px solid rgb(255 106 51 / 0.55);
+  --focus-outline-blue: 2px solid rgb(255 106 51 / 0.55);
 
-  --focus-outline-default: 2px solid oklch(0.66 0.16 277 / 0.5);
-  --focus-outline-blue: 2px solid oklch(0.66 0.16 277 / 0.5);
-
-  --elevation-sm: 0 0 0 1px oklch(1 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.4);
-  --elevation-base: 0 0 0 1px oklch(1 0 0 / 0.07), 0 1px 3px oklch(0 0 0 / 0.45);
-  --elevation-md: 0 0 0 1px oklch(1 0 0 / 0.07),
-    0 4px 12px -2px oklch(0 0 0 / 0.5);
-  --elevation-lg: 0 0 0 1px oklch(1 0 0 / 0.08),
-    0 12px 28px -8px oklch(0 0 0 / 0.55);
-  --elevation-xl: 0 0 0 1px oklch(1 0 0 / 0.08),
-    0 20px 40px -12px oklch(0 0 0 / 0.6);
-  --elevation-2xl: 0 0 0 1px oklch(1 0 0 / 0.09),
-    0 32px 64px -16px oklch(0 0 0 / 0.65);
+  --elevation-base: 0 0 0 1px rgb(255 255 255 / 0.07), 0 1px 3px rgb(0 0 0 / 0.45);
 }
 
-/* ---- Primary buttons: indigo instead of near-black ----
-   frappe-ui's solid gray Button is the only element pairing these two classes
-   on a <button>; tooltips and pills that share the dark token are divs. */
-button.bg-surface-gray-10.text-ink-base {
-  background-color: var(--accent-6);
-  color: var(--accent-fg);
+/* ---- Secondary buttons: white + hairline border (Figma Button/Secondary) ----
+   frappe-ui's subtle gray Button is the only <button> pairing these classes. */
+:root:not([data-theme='dark']) button.bg-surface-gray-2.text-ink-gray-8 {
+  background-color: var(--surface-base);
+  box-shadow: inset 0 0 0 1px var(--outline-gray-1), 0 1px 2px rgb(17 17 17 / 0.04);
 }
-button.bg-surface-gray-10.text-ink-base:hover {
-  background-color: var(--accent-7);
-}
-button.bg-surface-gray-10.text-ink-base:active {
-  background-color: var(--accent-8);
+:root:not([data-theme='dark']) button.bg-surface-gray-2.text-ink-gray-8:hover {
+  background-color: var(--surface-gray-2);
+  box-shadow: inset 0 0 0 1px var(--outline-gray-2), 0 1px 2px rgb(17 17 17 / 0.04);
 }
 
-/* ---- Sidebar: flat active row with an accent marker ---- */
+/* ---- Sidebar: white raised chip + coral marker on the active row ---- */
 [data-slot='sidebar-item'] {
   position: relative;
 }
 [data-slot='sidebar-item'][data-state='active'] {
-  background-color: var(--surface-gray-3);
-  box-shadow: none;
+  background-color: var(--surface-base);
+  box-shadow: 0 0 0 1px var(--outline-gray-1), 0 1px 2px rgb(17 17 17 / 0.04);
   color: var(--ink-gray-9);
   font-weight: 500;
 }
 [data-slot='sidebar-item'][data-state='active']::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: -8px; /* sits on the sidebar edge (the nav has 8px side padding) */
   top: 6px;
   bottom: 6px;
-  width: 2px;
-  border-radius: 2px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
   background-color: var(--accent-6);
+}
+
+/* ---- Dashboard number cards (Figma KPI Card) ----
+   `.max-h-[140px]` only exists on frappe-ui's NumberChart root. */
+.rounded.shadow:has(> * > .max-h-\[140px\]),
+.rounded.shadow:has(> .max-h-\[140px\]) {
+  border-radius: 12px;
+}
+.rounded-md.bg-surface-base.shadow {
+  border-radius: 12px; /* axis & donut chart cards */
+}
+.max-h-\[140px\] .text-\[24px\] {
+  color: var(--ink-gray-9);
+  letter-spacing: -0.02em;
+}
+/* Trend delta -> pill badge */
+.max-h-\[140px\] .text-xs-medium.text-ink-green-6,
+.max-h-\[140px\] .text-xs-medium.text-ink-red-8 {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 2px 6px;
+  border-radius: 9999px;
+}
+.max-h-\[140px\] .text-xs-medium.text-ink-green-6 {
+  background-color: var(--surface-green-2);
+}
+.max-h-\[140px\] .text-xs-medium.text-ink-red-8 {
+  background-color: var(--surface-red-2);
 }
 
 /* ---- Checkboxes & radios pick up the accent ---- */
@@ -181,5 +202,5 @@ input[type='radio'] {
 
 /* ---- Text selection ---- */
 ::selection {
-  background-color: oklch(0.56 0.19 277 / 0.18);
+  background-color: rgb(255 83 22 / 0.18);
 }
