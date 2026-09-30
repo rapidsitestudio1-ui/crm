@@ -17,6 +17,9 @@
     >
       <div class="flex h-full flex-col p-2">
         <UserDropdown :isCollapsed="isCollapsed" />
+        <div class="mt-2">
+          <GlobalSearch :isCollapsed="isCollapsed" />
+        </div>
 
         <!-- overflow-y-auto forces overflow-x to clip too, which would slice the
              active row's shadow. Widen the scroll box to the sidebar edges and
@@ -184,6 +187,7 @@ import CollapsibleSection from '@/components/CollapsibleSection.vue'
 import Icon from '@/components/Icon.vue'
 import PinIcon from '@/components/Icons/PinIcon.vue'
 import UserDropdown from '@/components/UserDropdown.vue'
+import GlobalSearch from '@/components/GlobalSearch.vue'
 import SquareAsterisk from '@/components/Icons/SquareAsterisk.vue'
 import LeadsIcon from '@/components/Icons/LeadsIcon.vue'
 import WebsiteIcon from '@/components/Icons/WebsiteIcon.vue'

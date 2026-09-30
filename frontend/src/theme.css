@@ -163,32 +163,9 @@
   background-color: var(--accent-6);
 }
 
-/* ---- Dashboard number cards (Figma KPI Card) ----
-   `.max-h-[140px]` only exists on frappe-ui's NumberChart root. */
-.rounded.shadow:has(> * > .max-h-\[140px\]),
-.rounded.shadow:has(> .max-h-\[140px\]) {
-  border-radius: 12px;
-}
+/* ---- Dashboard chart cards: Figma Card radius (number cards are KpiCard.vue) ---- */
 .rounded-md.bg-surface-base.shadow {
-  border-radius: 12px; /* axis & donut chart cards */
-}
-.max-h-\[140px\] .text-\[24px\] {
-  color: var(--ink-gray-9);
-  letter-spacing: -0.02em;
-}
-/* Trend delta -> pill badge */
-.max-h-\[140px\] .text-xs-medium.text-ink-green-6,
-.max-h-\[140px\] .text-xs-medium.text-ink-red-8 {
-  align-self: flex-start;
-  margin-top: 4px;
-  padding: 2px 6px;
-  border-radius: 9999px;
-}
-.max-h-\[140px\] .text-xs-medium.text-ink-green-6 {
-  background-color: var(--surface-green-2);
-}
-.max-h-\[140px\] .text-xs-medium.text-ink-red-8 {
-  background-color: var(--surface-red-2);
+  border-radius: 12px;
 }
 
 /* ---- Checkboxes & radios pick up the accent ---- */

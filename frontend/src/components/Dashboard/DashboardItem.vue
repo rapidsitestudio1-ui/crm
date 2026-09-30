@@ -1,18 +1,13 @@
 <template>
   <div class="h-full w-full">
-    <div
-      v-if="item.type == 'number_chart'"
-      class="flex h-full w-full rounded shadow overflow-hidden cursor-pointer"
-    >
-      <Tooltip :text="__(item.data.tooltip)">
-        <NumberChart
-          v-if="item.data"
-          :key="index"
-          class="!items-start"
-          :config="item.data"
-        />
-      </Tooltip>
-    </div>
+    <KpiCard
+      v-if="item.type == 'number_chart' && item.data"
+      :key="index"
+      :index="index"
+      :name="item.name"
+      :config="item.data"
+      :tooltip="item.data.tooltip || item.tooltip"
+    />
     <div
       v-else-if="item.type == 'spacer'"
       class="rounded bg-surface-base h-full overflow-hidden text-ink-gray-5 flex items-center justify-center"
@@ -35,7 +30,8 @@
   </div>
 </template>
 <script setup>
-import { AxisChart, DonutChart, NumberChart, Tooltip } from 'frappe-ui'
+import KpiCard from '@/components/Dashboard/KpiCard.vue'
+import { AxisChart, DonutChart } from 'frappe-ui'
 
 defineProps({
   index: { type: Number, required: true },
