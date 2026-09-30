@@ -24,7 +24,7 @@
         <!-- overflow-y-auto forces overflow-x to clip too, which would slice the
              active row's shadow. Widen the scroll box to the sidebar edges and
              pad the content back in so the shadow has room. -->
-        <div class="-mx-2 mt-2 flex flex-1 flex-col gap-1 overflow-y-auto px-2">
+        <div class="-mx-2 mt-2 flex flex-1 flex-col gap-[7px] overflow-y-auto px-2">
           <SidebarItem
             id="notifications-btn"
             :label="__('Notifications')"
@@ -76,7 +76,8 @@
                 </span>
               </SidebarLabel>
             </template>
-            <nav class="flex flex-col gap-1">
+            <!-- 7px gap: 35px row pitch (was 32px), per the user's +8-10% -->
+            <nav class="flex flex-col gap-[7px]">
               <SidebarItem
                 v-for="link in section.views"
                 :key="link.key"
