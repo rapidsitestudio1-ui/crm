@@ -95,7 +95,7 @@
   --outline-elevation-1: #e8e8e8;
   --outline-elevation-2: #e8e8e8;
 
-  /* ---- Chart palette (Figma color/data/*), read by DashboardItem.vue.
+  /* ---- Chart palette (Figma color/data/*), read by Dashboard/ChartCard.vue.
      Hex only: ECharts can't parse oklch(). ---- */
   --chart-1: #ff5316;
   --chart-2: #1c1c1c;
@@ -192,10 +192,6 @@
   background-color: var(--accent-6);
 }
 
-/* ---- Dashboard chart cards: Figma Card radius (number cards are KpiCard.vue) ---- */
-.rounded-md.bg-surface-base.shadow {
-  border-radius: 12px;
-}
 
 /* ---- Checkboxes & radios pick up the accent ---- */
 input[type='checkbox'],

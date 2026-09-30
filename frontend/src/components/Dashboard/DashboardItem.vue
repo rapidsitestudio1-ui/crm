@@ -15,37 +15,24 @@
     >
       {{ editing ? __('Spacer') : '' }}
     </div>
-    <div
-      v-else-if="item.type == 'axis_chart'"
-      class="h-full w-full rounded-md bg-surface-base shadow"
-    >
-      <AxisChart v-if="item.data" :config="withThemeColors(item.data)" />
-    </div>
-    <div
-      v-else-if="item.type == 'donut_chart'"
-      class="h-full w-full rounded-md bg-surface-base shadow overflow-hidden"
-    >
-      <DonutChart v-if="item.data" :config="withThemeColors(item.data)" />
-    </div>
+    <template v-else-if="['axis_chart', 'donut_chart'].includes(item.type)">
+      <ChartCard
+        v-if="item.data"
+        :name="item.name"
+        :type="item.type"
+        :config="item.data"
+      />
+      <div v-else class="h-full w-full rounded-lg bg-surface-base shadow" />
+    </template>
   </div>
 </template>
 <script setup>
 import KpiCard from '@/components/Dashboard/KpiCard.vue'
-import { AxisChart, DonutChart } from 'frappe-ui'
+import ChartCard from '@/components/Dashboard/ChartCard.vue'
 
 defineProps({
   index: { type: Number, required: true },
   item: { type: Object, required: true },
   editing: { type: Boolean, default: false },
 })
-
-// Chart palette comes from the theme (--chart-1..6 in theme.css); colors a
-// chart config already sets still win.
-function withThemeColors(config) {
-  const style = getComputedStyle(document.documentElement)
-  const colors = [1, 2, 3, 4, 5, 6]
-    .map((i) => style.getPropertyValue(`--chart-${i}`).trim())
-    .filter(Boolean)
-  return colors.length ? { colors, ...config } : config
-}
 </script>
