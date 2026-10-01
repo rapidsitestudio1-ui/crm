@@ -33,127 +33,93 @@
     :options="{
       onClick: (row) => showTask(row.name),
       onNewClick: (column) => createTask(column),
+      doctype: 'CRM Task',
+      cardFields: taskCardFields,
     }"
     @update="(data) => viewControls.updateKanbanSettings(data)"
     @loadMore="(columnName) => viewControls.loadMoreKanban(columnName)"
   >
-    <template #title="{ titleField, itemName }">
-      <div class="flex items-center gap-2">
-        <div v-if="titleField === 'status'">
-          <TaskStatusIcon :status="getRow(itemName, titleField).label" />
-        </div>
-        <div v-else-if="titleField === 'priority'">
-          <TaskPriorityIcon :priority="getRow(itemName, titleField).label" />
-        </div>
-        <div v-else-if="titleField === 'assigned_to'">
-          <Avatar
-            v-if="getRow(itemName, titleField).full_name"
-            class="flex items-center"
-            :image="getRow(itemName, titleField).user_image"
-            :label="getRow(itemName, titleField).full_name"
-            size="sm"
+    <!-- Custom: cards share the contact card's layout (kanban.css). -->
+    <template #card-header="{ fields }">
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-start gap-2.5">
+          <TaskStatusIcon
+            class="mt-0.5 size-4 shrink-0"
+            :status="task(fields).status"
           />
+          <span class="kb-title line-clamp-2 min-w-0 flex-1">
+            {{ task(fields).title || __('No Title') }}
+          </span>
+          <div class="kb-reveal -mr-1.5 -mt-0.5 shrink-0" @click.stop.prevent>
+            <Dropdown :options="actions(fields.name)" placement="right">
+              <button
+                type="button"
+                class="kb-icon-btn"
+                :aria-label="__('Quick actions')"
+              >
+                <LucideMoreHorizontal class="size-4" />
+              </button>
+            </Dropdown>
+          </div>
         </div>
-        <div
-          v-if="['modified', 'creation'].includes(titleField)"
-          class="truncate text-base"
+
+        <p
+          v-if="plainText(task(fields).description)"
+          class="kb-subtitle line-clamp-2 -mt-1"
         >
-          <Tooltip :text="getRow(itemName, titleField).label">
-            <div>{{ getRow(itemName, titleField).timeAgo }}</div>
-          </Tooltip>
-        </div>
+          {{ plainText(task(fields).description) }}
+        </p>
+
         <div
-          v-else-if="getRow(itemName, titleField).label"
-          class="truncate text-base"
+          v-if="task(fields).due_date || task(fields).reference_docname"
+          class="flex flex-col gap-1"
         >
-          {{ getRow(itemName, titleField).label }}
+          <div
+            v-if="task(fields).due_date"
+            class="kb-meta"
+            :class="{ 'is-overdue': isOverdue(task(fields)) }"
+          >
+            <LucideCalendar />
+            <Tooltip :text="formatDate(task(fields).due_date, 'ddd, MMM D, YYYY h:mm a')">
+              <span class="truncate">
+                {{ dueLabel(task(fields)) }}
+              </span>
+            </Tooltip>
+          </div>
+          <button
+            v-if="task(fields).reference_docname"
+            type="button"
+            class="kb-meta kb-ref"
+            @click.stop.prevent="
+              redirect(task(fields).reference_doctype, task(fields).reference_docname)
+            "
+          >
+            <LucideArrowUpRight />
+            <span class="truncate">
+              {{ task(fields).reference_doctype == 'CRM Deal' ? __('Deal') : __('Lead') }}
+              ·
+              {{ referenceTitle(task(fields)) }}
+            </span>
+          </button>
         </div>
-        <div v-else class="text-ink-gray-4">{{ __('No Title') }}</div>
+
+        <div v-if="task(fields).priority" class="flex flex-wrap items-center gap-1.5">
+          <span class="kb-badge" :class="priorityClass(task(fields).priority)">
+            <TaskPriorityIcon class="!size-2" :priority="task(fields).priority" />
+            {{ __(task(fields).priority) }}
+          </span>
+        </div>
       </div>
+    </template>
+    <template #card-footer="{ fields }">
+      <KanbanCardFooter
+        :assignees="assigneesOf(task(fields).assigned_to)"
+        :time="timestampCell(task(fields).modified).timeAgo"
+        :timeTitle="timestampCell(task(fields).modified).label"
+      />
     </template>
     <template #fields="{ fieldName, itemName }">
-      <div
-        v-if="getRow(itemName, fieldName).label"
-        class="truncate flex items-center gap-2"
-      >
-        <div v-if="fieldName === 'status'">
-          <TaskStatusIcon
-            class="size-3"
-            :status="getRow(itemName, fieldName).label"
-          />
-        </div>
-        <div v-else-if="fieldName === 'priority'">
-          <TaskPriorityIcon :priority="getRow(itemName, fieldName).label" />
-        </div>
-        <div v-else-if="fieldName === 'assigned_to'">
-          <Avatar
-            v-if="getRow(itemName, fieldName).full_name"
-            class="flex items-center"
-            :image="getRow(itemName, fieldName).user_image"
-            :label="getRow(itemName, fieldName).full_name"
-            size="sm"
-          />
-        </div>
-        <div
-          v-if="['modified', 'creation'].includes(fieldName)"
-          class="truncate text-base"
-        >
-          <Tooltip :text="getRow(itemName, fieldName).label">
-            <div>{{ getRow(itemName, fieldName).timeAgo }}</div>
-          </Tooltip>
-        </div>
-        <div
-          v-else-if="fieldName == 'description'"
-          class="truncate text-base max-h-44"
-        >
-          <!-- content is passed through sanitizeHTML() (DOMPurify) before rendering, so v-html is safe here -->
-          <!-- eslint-disable vue/no-v-html -->
-          <div
-            v-if="getRow(itemName, fieldName).label"
-            class="prose-f prose-sm max-w-none flex-1 overflow-hidden"
-            v-html="sanitizeHTML(getRow(itemName, fieldName).label)"
-          />
-          <!-- eslint-enable vue/no-v-html -->
-        </div>
-        <div v-else class="truncate text-base">
-          {{ getRow(itemName, fieldName).label }}
-        </div>
-      </div>
-    </template>
-    <template #actions="{ itemName }">
-      <div class="flex gap-2 items-center justify-between">
-        <div>
-          <Button
-            v-if="getRow(itemName, 'reference_docname').label"
-            class="-ml-2"
-            variant="ghost"
-            size="sm"
-            :label="
-              getRow(itemName, 'reference_doctype').label == 'CRM Deal'
-                ? __('Deal')
-                : __('Lead')
-            "
-            :iconRight="ArrowUpRightIcon"
-            @click.stop="
-              redirect(
-                getRow(itemName, 'reference_doctype').label,
-                getRow(itemName, 'reference_docname').label,
-              )
-            "
-          />
-        </div>
-        <Dropdown
-          class="flex items-center gap-2"
-          :options="actions(itemName)"
-          variant="ghost"
-        >
-          <Button
-            icon="lucide-more-horizontal"
-            variant="ghost"
-            @click.stop.prevent
-          />
-        </Dropdown>
-      </div>
+      {{ getRow(itemName, fieldName).timeAgo || getRow(itemName, fieldName).label }}
     </template>
   </KanbanView>
   <TasksListView
@@ -198,7 +164,6 @@
 <script setup>
 import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
 import CustomActions from '@/components/CustomActions.vue'
-import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
 import TaskStatusIcon from '@/components/Icons/TaskStatusIcon.vue'
 import TaskPriorityIcon from '@/components/Icons/TaskPriorityIcon.vue'
 import Email2Icon from '@/components/Icons/Email2Icon.vue'
@@ -207,15 +172,27 @@ import ViewControls from '@/components/ViewControls.vue'
 import TasksListView from '@/components/ListViews/TasksListView.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import KanbanView from '@/components/Kanban/KanbanView.vue'
+import KanbanCardFooter from '@/components/Kanban/KanbanCardFooter.vue'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
+import LucideMoreHorizontal from '~icons/lucide/more-horizontal'
+import LucideCalendar from '~icons/lucide/calendar'
+import LucideArrowUpRight from '~icons/lucide/arrow-up-right'
 import { useDoctypeModal } from '@/composables/doctypeModal'
+import { useKanbanExtras } from '@/composables/useKanbanExtras'
 import { getMeta } from '@/stores/meta'
 import { usersStore } from '@/stores/users'
-import { formatDate, sanitizeHTML } from '@/utils'
+import { formatDate } from '@/utils'
 import { timestampCell } from '@/composables/useTimelinePreferences'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
-import { Tooltip, Avatar, Dropdown, call } from 'frappe-ui'
-import { computed, ref } from 'vue'
+import { Tooltip, Dropdown, call, dayjsLocal } from 'frappe-ui'
+import {
+  computed,
+  ref,
+  reactive,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+} from 'vue'
 import { useRouter } from 'vue-router'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
@@ -237,6 +214,118 @@ const viewControls = ref(null)
 
 const showDeleteTaskModal = ref(false)
 const taskToDelete = ref(null)
+
+// ---- Kanban cards (custom): same look as the contact cards ----
+
+onMounted(() => (document.documentElement.dataset.surface = 'pipeline'))
+onBeforeUnmount(() => delete document.documentElement.dataset.surface)
+
+// Fields the card shows itself, so they're not repeated as label/value rows.
+const taskCardFields = [
+  'title',
+  'description',
+  'status',
+  'priority',
+  'due_date',
+  'assigned_to',
+  'reference_doctype',
+  'reference_docname',
+  'modified',
+  'creation',
+]
+
+// The board only fetches the fields chosen in Kanban settings.
+const extras = useKanbanExtras(
+  'CRM Task',
+  () => {
+    const d = tasks.value?.data
+    if (d?.view_type !== 'kanban' || !d.data?.length) return null
+    return d.data.flatMap((col) => (col.data || []).map((t) => t.name))
+  },
+  taskCardFields,
+)
+
+function task(fields) {
+  return { ...extras[fields.name], ...fields }
+}
+
+// Lead / deal names for the reference line.
+const refTitles = reactive({})
+watch(
+  () => Object.values(extras),
+  async (rows) => {
+    const byDoctype = { 'CRM Lead': [], 'CRM Deal': [] }
+    for (const t of rows) {
+      const key = `${t.reference_doctype}:${t.reference_docname}`
+      if (byDoctype[t.reference_doctype] && !(key in refTitles)) {
+        byDoctype[t.reference_doctype].push(t.reference_docname)
+        refTitles[key] = ''
+      }
+    }
+    const fieldsFor = {
+      'CRM Lead': ['name', 'lead_name', 'organization'],
+      'CRM Deal': ['name', 'organization', 'lead_name'],
+    }
+    for (const [doctype, names] of Object.entries(byDoctype)) {
+      if (!names.length) continue
+      try {
+        const docs = await call('frappe.client.get_list', {
+          doctype,
+          filters: { name: ['in', names] },
+          fields: fieldsFor[doctype],
+          limit_page_length: names.length,
+        })
+        for (const d of docs || []) {
+          refTitles[`${doctype}:${d.name}`] =
+            doctype === 'CRM Deal'
+              ? d.organization || d.lead_name
+              : d.lead_name || d.organization
+        }
+      } catch {
+        // Falls back to the record ID.
+      }
+    }
+  },
+)
+
+function referenceTitle(t) {
+  return refTitles[`${t.reference_doctype}:${t.reference_docname}`] || t.reference_docname
+}
+
+function plainText(html) {
+  if (!html) return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return (doc.body.textContent || '').replace(/\s+/g, ' ').trim()
+}
+
+function isOverdue(t) {
+  return (
+    t.due_date &&
+    !['Done', 'Canceled'].includes(t.status) &&
+    dayjsLocal(t.due_date).isBefore(dayjsLocal())
+  )
+}
+
+function dueLabel(t) {
+  const due = dayjsLocal(t.due_date)
+  const today = dayjsLocal().startOf('day')
+  const days = due.startOf('day').diff(today, 'day')
+  const hasTime = due.format('HH:mm') !== '00:00'
+  const time = hasTime ? `, ${due.format('h:mm a')}` : ''
+  if (days === 0) return __('Today') + time
+  if (days === 1) return __('Tomorrow') + time
+  if (days === -1) return __('Yesterday') + time
+  return due.format(due.year() === today.year() ? 'MMM D' : 'MMM D, YYYY') + time
+}
+
+function priorityClass(priority) {
+  return { High: 'is-danger', Medium: 'is-warning' }[priority] || ''
+}
+
+function assigneesOf(user) {
+  const u = user && getUser(user)
+  return u?.full_name ? [{ label: u.full_name, image: u.user_image }] : []
+}
 
 function getRow(name, field) {
   function getValue(value) {

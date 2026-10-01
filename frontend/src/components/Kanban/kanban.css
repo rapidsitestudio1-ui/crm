@@ -464,3 +464,28 @@
   color: var(--kb-ink-2);
   white-space: nowrap;
 }
+
+/* Task cards: overdue due date, clickable lead/deal line. */
+.kb-meta.is-overdue,
+.kb-meta.is-overdue svg {
+  color: #b91c1c;
+}
+[data-theme='dark'] .kb-meta.is-overdue,
+[data-theme='dark'] .kb-meta.is-overdue svg {
+  color: #fca5a5;
+}
+.kb-ref {
+  max-width: 100%;
+  margin: 0 -4px;
+  padding: 0 4px;
+  border-radius: 4px;
+  text-align: left;
+}
+.kb-ref:hover {
+  background: var(--kb-hover);
+  color: var(--kb-ink);
+}
+.kb-ref:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--kb-accent-ring);
+}

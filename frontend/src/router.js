@@ -262,9 +262,12 @@ router.beforeEach(async (to, from, next) => {
       }
 
       const doctype = doctypeMap[to.name]
-      // Custom: Leads and Deals open on Kanban, Organizations on the view
-      // used last (List / Kanban), unless a default view is set.
-      let defaultViewType = ['Leads', 'Deals'].includes(to.name)
+      // Custom: Leads, Deals, Contacts and Tasks open on Kanban,
+      // Organizations on the view used last (List / Kanban), unless a
+      // default view is set.
+      let defaultViewType = ['Leads', 'Deals', 'Contacts', 'Tasks'].includes(
+        to.name,
+      )
         ? 'kanban'
         : 'list'
       if (to.name === 'Organizations') {
