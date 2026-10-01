@@ -36,7 +36,19 @@ export const viewsStore = defineStore('crm-views', (doctype) => {
           publicViews.value?.push(view)
         }
         if (view.is_standard && view.dt) {
-          standardViews.value[view.dt + ' ' + view.type] = view
+          // Custom: if a user ends up with duplicate standard views for the
+          // same doctype + type, use the most recently saved one. Otherwise
+          // the loaded view could be a stale copy while changes (e.g. clearing
+          // filters) are saved to the other, and never appear to stick.
+          const key = view.dt + ' ' + view.type
+          const current = standardViews.value[key]
+          if (
+            !current ||
+            current.name === view.name ||
+            String(view.modified) >= String(current.modified)
+          ) {
+            standardViews.value[key] = view
+          }
         }
         if (view.is_default && view.route_name) {
           defaultViews[view.route_name] = view

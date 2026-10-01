@@ -431,6 +431,19 @@ const empty = computed(() => {
     }
   }
   if (tab.value !== 'all') {
+    const inTab = relations.namesFor(tab.value)?.length || 0
+    // The tab has contacts, but the view's filters hide them: say so.
+    if (hasFilters && inTab) {
+      return {
+        icon: LucideFilterX,
+        title: __('Filters are hiding these contacts'),
+        text: __('{0} contact(s) in this tab don’t match the filters on this view.', [inTab]),
+        actions: [
+          { ...clearFilters, primary: true },
+          { label: __('Show all contacts'), onClick: () => (tab.value = 'all') },
+        ],
+      }
+    }
     return {
       ...TAB_EMPTY[tab.value],
       actions: [
