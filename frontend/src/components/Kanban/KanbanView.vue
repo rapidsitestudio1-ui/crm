@@ -1,5 +1,10 @@
 <template>
-  <div class="kb-board flex h-full overflow-x-auto" :class="{ 'is-dragging': dragging }">
+  <div class="kb-board flex h-full min-h-0 flex-col">
+  <p v-if="!canDrag && options.dragDisabledReason" class="kb-notice" role="note">
+    <LucideLock class="size-3.5" />
+    {{ options.dragDisabledReason }}
+  </p>
+  <div class="flex min-h-0 flex-1 overflow-x-auto" :class="{ 'is-dragging': dragging }">
     <Draggable
       v-if="columns"
       :list="columns"
@@ -11,10 +16,10 @@
     >
       <template #item="{ element: column }">
         <section
-          v-if="!column.column.delete"
+          v-if="!column.column.delete && !isHiddenEmpty(column)"
           class="kb-column"
           :class="{ 'is-drop-target': dragging && overColumn === column.column.name }"
-          :aria-label="column.column.name"
+          :aria-label="labelOf(column)"
         >
           <header
             class="kb-column-header"
@@ -29,7 +34,7 @@
                 <button
                   type="button"
                   class="kb-icon-btn !size-5 -ml-1"
-                  :aria-label="__('Change {0} color', [column.column.name])"
+                  :aria-label="__('Change {0} color', [labelOf(column)])"
                   @click="togglePopover"
                 >
                   <span
@@ -62,7 +67,7 @@
                 </div>
               </template>
             </Popover>
-            <span class="kb-column-name">{{ __(column.column.name) }}</span>
+            <span class="kb-column-name">{{ labelOf(column) }}</span>
             <span class="kb-count" :aria-label="__('{0} records', [countOf(column)])">
               {{ countOf(column) }}
             </span>
@@ -72,7 +77,7 @@
                 <button
                   type="button"
                   class="kb-icon-btn kb-reveal"
-                  :aria-label="__('{0} column options', [column.column.name])"
+                  :aria-label="__('{0} column options', [labelOf(column)])"
                 >
                   <LucideMoreHorizontal class="size-4" />
                 </button>
@@ -81,7 +86,7 @@
             <button
               type="button"
               class="kb-icon-btn"
-              :aria-label="__('Add to {0}', [column.column.name])"
+              :aria-label="__('Add to {0}', [labelOf(column)])"
               @click="options.onNewClick(column)"
             >
               <LucidePlus class="size-4" />
@@ -96,6 +101,8 @@
               class="kb-cards"
               :delay="isTouchScreenDevice() ? 200 : 0"
               :data-column="column.column.name"
+              :data-empty="canDrag ? __('Drop here') : __('No records')"
+              :disabled="!canDrag"
               :force-fallback="true"
               :fallback-tolerance="4"
               ghost-class="kb-ghost"
@@ -181,7 +188,21 @@
         </section>
       </template>
     </Draggable>
-    <div class="shrink-0 min-w-64 pt-4 pr-4">
+    <div class="shrink-0 min-w-64 pt-4 pr-4 flex flex-col gap-2">
+      <button
+        v-if="emptyColumnCount"
+        type="button"
+        class="kb-load-more flex w-full items-center justify-center gap-1.5"
+        :aria-pressed="showEmpty"
+        @click="showEmpty = !showEmpty"
+      >
+        <component :is="showEmpty ? LucideEyeOff : LucideEye" class="size-3.5" />
+        {{
+          showEmpty
+            ? __('Hide empty columns')
+            : __('Show {0} empty columns', [emptyColumnCount])
+        }}
+      </button>
       <Combobox
         :model-value="null"
         :options="deletedColumns"
@@ -208,11 +229,15 @@
       </Combobox>
     </div>
   </div>
+  </div>
 </template>
 <script setup>
 import './kanban.css'
 import LucidePlus from '~icons/lucide/plus'
 import LucideMoreHorizontal from '~icons/lucide/more-horizontal'
+import LucideLock from '~icons/lucide/lock'
+import LucideEye from '~icons/lucide/eye'
+import LucideEyeOff from '~icons/lucide/eye-off'
 import RefreshIcon from '@/components/Icons/RefreshIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import { isTouchScreenDevice, colors, parseColor } from '@/utils'
@@ -234,6 +259,13 @@ const props = defineProps({
       getStatus: null,
       // Fields the page's card header/footer already shows
       cardFields: [],
+      // (name) => column label, e.g. '' -> 'No industry'
+      columnLabel: null,
+      // Hide columns with no records (display only; toggle on the board)
+      hideEmptyColumns: false,
+      // false disables drag-and-drop (e.g. read-only grouping field)
+      canDrag: true,
+      dragDisabledReason: '',
     }),
   },
 })
@@ -270,6 +302,30 @@ const deletedColumns = computed(() => {
 })
 
 // ---- Presentation helpers (custom) ----
+
+const canDrag = computed(() => props.options.canDrag !== false)
+
+function labelOf(column) {
+  const name = column.column.name
+  return props.options.columnLabel?.(name) ?? (name ? __(name) : __('Not set'))
+}
+
+// Empty columns can be hidden (not saved): boards grouped by a long list,
+// e.g. 50 industries, would otherwise be mostly empty columns.
+const showEmpty = ref(false)
+function isHiddenEmpty(column) {
+  return (
+    props.options.hideEmptyColumns &&
+    !showEmpty.value &&
+    !column.column.delete &&
+    countOf(column) === 0
+  )
+}
+const emptyColumnCount = computed(() =>
+  props.options.hideEmptyColumns
+    ? columns.value.filter((c) => !c.column.delete && countOf(c) === 0).length
+    : 0,
+)
 
 function toneOf(column) {
   return getStageTone(

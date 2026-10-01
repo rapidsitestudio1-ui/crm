@@ -410,6 +410,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useActiveTabManager } from '@/composables/useActiveTabManager'
 import { useUnsavedChangesWarning } from '@/composables/useUnsavedChangesWarning'
 import { useVisitedRecords } from '@/composables/useVisitedRecords'
+import { usePipelineSurface } from '@/composables/usePipelineSurface'
+
+usePipelineSurface()
 
 const { on } = useBroadcast()
 const { brand } = getSettings()

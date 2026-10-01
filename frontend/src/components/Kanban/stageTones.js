@@ -67,12 +67,24 @@ const FROM_FRAPPE_COLOR = {
  * @param {object} column    Kanban column ({ name, color, color_custom })
  * @param {object} [status]  Status record ({ type, position }) when available
  */
+// Categories without an inherent order (industries, territories, sizes): a
+// stable color per name, so a category keeps its color across sessions.
+const CATEGORY_CYCLE = ['blue', 'violet', 'amber', 'emerald', 'cyan', 'indigo', 'slate']
+function categoryTone(name) {
+  let h = 0
+  for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return TONES[CATEGORY_CYCLE[h % CATEGORY_CYCLE.length]]
+}
+
 export function getStageTone(doctype, column, status) {
   if (column?.color_custom && FROM_FRAPPE_COLOR[column.color]) {
     return TONES[FROM_FRAPPE_COLOR[column.color]]
   }
+  // The "no value" column (e.g. organizations without an industry).
+  if (!column?.name) return TONES.gray
   const named = BY_NAME[doctype]?.[column?.name]
   if (named) return TONES[named]
+  if (doctype === 'CRM Organization') return categoryTone(column.name)
 
   switch (status?.type) {
     case 'Won':

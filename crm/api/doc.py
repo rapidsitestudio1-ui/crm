@@ -385,6 +385,17 @@ def get_data(
 			elif field_meta.fieldtype == "Select":
 				kanban_columns = [{"name": option} for option in field_meta.options.split("\n")]
 
+			# Custom: records with no value for the column field get their own
+			# column (e.g. organizations without an industry), otherwise they are
+			# invisible on the board. Only added when such records exist, so
+			# boards whose field is always set (lead/deal status) are unchanged.
+			if (
+				kanban_columns
+				and not any(not (kc.get("name") or "") for kc in kanban_columns)
+				and frappe.get_all(doctype, filters=[[column_field, "is", "not set"]], limit=1)
+			):
+				kanban_columns = [*kanban_columns, {"name": ""}]
+
 		if not title_field:
 			title_field = "name"
 			if hasattr(_list, "default_kanban_settings"):
@@ -403,9 +414,11 @@ def get_data(
 				rows.append(field)
 
 		for kc in kanban_columns:
-			column_filters = {column_field: kc.get("name")}
+			# Custom: the empty-value column matches records where the field is unset.
+			column_value = kc.get("name") if kc.get("name") else ["is", "not set"]
+			column_filters = {column_field: column_value}
 			order = kc.get("order")
-			if (column_field in filters and filters.get(column_field) != kc.get("name")) or kc.get("delete"):
+			if (column_field in filters and filters.get(column_field) != column_value) or kc.get("delete"):
 				column_data = []
 			else:
 				column_filters.update(filters.copy())
@@ -428,7 +441,7 @@ def get_data(
 					)
 
 				new_filters = filters.copy()
-				new_filters.update({column_field: kc.get("name")})
+				new_filters.update({column_field: column_value})
 
 				all_count = frappe.get_list(
 					doctype,

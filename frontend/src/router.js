@@ -262,10 +262,19 @@ router.beforeEach(async (to, from, next) => {
       }
 
       const doctype = doctypeMap[to.name]
-      // Custom: Leads and Deals open on Kanban unless a default view is set.
+      // Custom: Leads and Deals open on Kanban, Organizations on the view
+      // used last (List / Kanban), unless a default view is set.
       let defaultViewType = ['Leads', 'Deals'].includes(to.name)
         ? 'kanban'
         : 'list'
+      if (to.name === 'Organizations') {
+        try {
+          const last = localStorage.getItem('crm-last-view:Organizations')
+          if (['list', 'kanban'].includes(last)) defaultViewType = last
+        } catch {
+          // storage unavailable: keep the default
+        }
+      }
 
       let globalDefault = getDefaultView(to.name)
       if (globalDefault) {

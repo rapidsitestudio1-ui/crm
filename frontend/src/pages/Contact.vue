@@ -516,6 +516,9 @@ import {
   onBeforeUnmount,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { usePipelineSurface } from '@/composables/usePipelineSurface'
+
+usePipelineSurface()
 
 const { brand } = getSettings()
 const { makeCall, $dialog, $socket } = globalStore()

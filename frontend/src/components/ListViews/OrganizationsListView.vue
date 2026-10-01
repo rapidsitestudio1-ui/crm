@@ -1,13 +1,40 @@
 <template>
+  <!-- Mobile: compact list (tap opens the organization; Preview opens the drawer). -->
+  <ul v-if="isMobileView" class="flex-1 overflow-y-auto bg-[var(--kb-card)]">
+    <li v-for="row in rows" :key="row.name">
+      <router-link :to="orgRoute(row)" class="ct-mobile-row">
+        <KanbanAvatar
+          :image="row.organization_name?.logo"
+          :label="row.organization_name?.label || row.name"
+          square
+        />
+        <span class="flex min-w-0 flex-1 flex-col">
+          <span class="ct-name truncate">{{ row.organization_name?.label || row.name }}</span>
+          <span class="ct-sub truncate">
+            {{ [row.__industry, row.__website].filter(Boolean).join(' · ') }}
+          </span>
+        </span>
+        <button
+          type="button"
+          class="ct-preview"
+          :aria-label="__('Preview {0}', [row.organization_name?.label || row.name])"
+          @click.stop.prevent="emit('preview', row.name)"
+        >
+          <LucidePanelRight class="size-3.5" />
+        </button>
+      </router-link>
+    </li>
+  </ul>
+
   <ListView
+    v-else
+    class="ct-table"
+    :class="$attrs.class"
     :columns="columns"
     :rows="rows"
     :options="{
-      getRowRoute: (row) => ({
-        name: 'Organization',
-        params: { organizationId: row.name },
-        query: { view: route.query.view, viewType: route.params.viewType },
-      }),
+      getRowRoute: orgRoute,
+      rowHeight: 56,
       selectable: options.selectable,
       showTooltip: options.showTooltip,
       resizeColumn: options.resizeColumn,
@@ -40,41 +67,92 @@
     </ListHeader>
     <ListRows
       v-slot="{ idx, column, item, row }"
-      class="mx-3 sm:mx-5"
       :rows="rows"
       doctype="CRM Organization"
     >
       <ListRowItem :item="item" :align="column.align" class="overflow-hidden">
-        <template #prefix>
-          <div v-if="column.key === 'organization_name'">
-            <Avatar
-              v-if="item.label"
-              class="flex items-center"
-              :image="item.logo"
-              :label="item.label"
-              size="sm"
-            />
-          </div>
-        </template>
         <template #default="{ label }">
+          <!-- Organization: logo, name, website underneath, Preview on hover -->
           <div
-            v-if="['modified', 'creation'].includes(column.key)"
-            class="truncate text-base"
-            @click="
-              (event) =>
-                emit('applyFilter', {
-                  event,
-                  idx,
-                  column,
-                  item,
-                  firstColumn: columns[0],
-                })
-            "
+            v-if="column.key === 'organization_name'"
+            class="relative flex w-full min-w-0 items-center gap-3"
+          >
+            <KanbanAvatar
+              :image="item?.logo"
+              :label="item?.label || row.name"
+              size="md"
+              square
+            />
+            <div class="flex min-w-0 flex-col">
+              <span class="ct-name truncate">{{ item?.label || row.name }}</span>
+              <span v-if="row.__website" class="ct-sub truncate">{{ row.__website }}</span>
+            </div>
+            <button
+              type="button"
+              class="ct-preview is-floating"
+              :aria-label="__('Preview {0}', [item?.label || row.name])"
+              @click.stop.prevent="emit('preview', row.name)"
+            >
+              <LucidePanelRight class="size-3.5" />
+              {{ __('Preview') }}
+            </button>
+          </div>
+
+          <div
+            v-else-if="column.key === 'industry'"
+            class="ct-cell"
+            @click="(event) => filterBy(event, idx, column, item)"
+          >
+            <span v-if="label" class="kb-badge">
+              <span class="size-1.5 rounded-full" :style="{ background: industryDot(label) }" />
+              {{ __(label) }}
+            </span>
+          </div>
+
+          <!-- Counts open the preview, which lists the contacts / deals -->
+          <div
+            v-else-if="column.key === '__contacts' || column.key === '__open_deals'"
+            class="ct-cell"
+          >
+            <button
+              v-if="item"
+              type="button"
+              class="ov-count-btn"
+              :aria-label="
+                column.key === '__contacts'
+                  ? __('{0} contacts at {1}, show', [item, row.organization_name?.label || row.name])
+                  : __('{0} open deals with {1}, show', [item, row.organization_name?.label || row.name])
+              "
+              @click.stop.prevent="emit('preview', row.name)"
+            >
+              <component :is="column.key === '__contacts' ? LucideUsers : LucideHandshake" />
+              {{ item }}
+            </button>
+            <span v-else-if="item === 0" class="is-muted" style="color: var(--kb-ink-3)">0</span>
+          </div>
+
+          <div
+            v-else-if="column.key === 'annual_revenue'"
+            class="ct-cell justify-end tabular-nums"
+            :class="{ 'is-muted': !row.__revenue }"
+            @click="(event) => filterBy(event, idx, column, item)"
+          >
+            <Tooltip v-if="!row.__revenue" :text="__('Not set (or 0)')">
+              <span>—</span>
+            </Tooltip>
+            <span v-else>{{ row.__revenue }}</span>
+          </div>
+
+          <div
+            v-else-if="['modified', 'creation'].includes(column.key)"
+            class="ct-cell is-muted"
+            @click="(event) => filterBy(event, idx, column, item)"
           >
             <Tooltip :text="item.label">
-              <div>{{ item.timeAgo }}</div>
+              <div class="truncate">{{ item.timeAgo }}</div>
             </Tooltip>
           </div>
+
           <div v-else-if="column.type === 'Check'">
             <FormControl
               type="checkbox"
@@ -102,32 +180,14 @@
             class="!opacity-100 flex-nowrap overflow-auto"
             :disabled="true"
             :max="column.options || 5"
-            @click="
-              (event) =>
-                emit('applyFilter', {
-                  event,
-                  idx,
-                  column,
-                  item,
-                  firstColumn: columns[0],
-                })
-            "
+            @click="(event) => filterBy(event, idx, column, item)"
           />
           <div
             v-else-if="label"
-            class="truncate text-base"
-            @click="
-              (event) =>
-                emit('applyFilter', {
-                  event,
-                  idx,
-                  column,
-                  item,
-                  firstColumn: columns[0],
-                })
-            "
+            class="ct-cell"
+            @click="(event) => filterBy(event, idx, column, item)"
           >
-            {{ getLabel(label, column) }}
+            <span class="truncate">{{ getLabel(label, column) }}</span>
           </div>
         </template>
       </ListRowItem>
@@ -143,6 +203,7 @@
     </ListSelectBanner>
   </ListView>
   <ListFooter
+    v-if="pageLengthCount"
     v-model="pageLengthCount"
     class="border-t sm:px-5 px-3 py-2"
     :options="{
@@ -161,27 +222,35 @@
   />
 </template>
 <script setup>
+import '@/components/Kanban/kanban.css'
+import '@/components/Contacts/contacts.css'
+import '@/components/Organizations/organizations.css'
+import LucidePanelRight from '~icons/lucide/panel-right'
+import LucideUsers from '~icons/lucide/users'
+import LucideHandshake from '~icons/lucide/handshake'
 import HeartIcon from '@/components/Icons/HeartIcon.vue'
 import RatingInput from '@/components/Controls/RatingInput.vue'
 import ListBulkActions from '@/components/ListBulkActions.vue'
 import ListRows from '@/components/ListViews/ListRows.vue'
+import KanbanAvatar from '@/components/Kanban/KanbanAvatar.vue'
+import { getStageTone } from '@/components/Kanban/stageTones'
+import { isMobileView } from '@/composables/settings'
 import { isTranslatable, formatDuration } from '@/utils'
 import {
-  Avatar,
   ListView,
   ListHeader,
   ListHeaderItem,
   ListSelectBanner,
   ListRowItem,
   ListFooter,
-  Tooltip,
   Dropdown,
+  Tooltip,
 } from 'frappe-ui'
 import { sessionStore } from '@/stores/session'
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-defineProps({
+const props = defineProps({
   rows: { type: Array, required: true },
   columns: { type: Array, required: true },
   options: {
@@ -204,6 +273,7 @@ const emit = defineEmits([
   'applyLikeFilter',
   'likeDoc',
   'selectionsChanged',
+  'preview',
 ])
 
 const route = useRoute()
@@ -211,9 +281,27 @@ const route = useRoute()
 const pageLengthCount = defineModel({ type: Number })
 const list = defineModel('list', { type: Object })
 
+function orgRoute(row) {
+  return {
+    name: 'Organization',
+    params: { organizationId: row.name },
+    query: { view: route.query.view, viewType: route.params.viewType },
+  }
+}
+
+function filterBy(event, idx, column, item) {
+  emit('applyFilter', { event, idx, column, item, firstColumn: props.columns[0] })
+}
+
 function onColumnWidthUpdated({ width, save }, column) {
   column.width = width
+  // Display columns can be relabelled copies; keep the saved view's in sync.
+  if (column.__source) column.__source.width = width
   if (save) emit('columnWidthUpdated', column)
+}
+
+function industryDot(name) {
+  return getStageTone('CRM Organization', { name }).dot
 }
 
 function getLabel(label, column) {

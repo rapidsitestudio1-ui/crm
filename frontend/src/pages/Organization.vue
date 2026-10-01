@@ -14,155 +14,332 @@
       />
     </template>
   </LayoutHeader>
-  <div v-if="organization.doc" ref="parentRef" class="flex h-full">
+
+  <div
+    v-if="organization.doc"
+    ref="parentRef"
+    class="cp-root flex h-full overflow-hidden"
+  >
+    <!-- ================= Left column ================= -->
     <Resizer
-      v-if="organization.doc"
       :parent="$refs.parentRef"
-      class="flex h-full flex-col overflow-hidden border-r"
+      class="cp-side flex h-full flex-col overflow-hidden"
     >
-      <div class="border-b">
+      <div class="flex-1 overflow-y-auto">
+        <!-- Identity -->
         <FileUploader
           :validateFile="validateIsImageFile"
           @success="changeOrganizationImage"
         >
           <template #default="{ openFileSelector, error }">
-            <div class="flex flex-col items-start justify-start gap-4 p-5">
-              <div class="flex gap-4 items-center">
-                <div class="group relative h-15.5 w-15.5">
-                  <Avatar
-                    size="3xl"
-                    class="h-15.5 w-15.5"
-                    :label="organization.doc.organization_name"
-                    :image="organization.doc.organization_logo"
-                  />
-                  <component
-                    :is="organization.doc.organization_logo ? Dropdown : 'div'"
-                    v-bind="
-                      organization.doc.organization_logo
-                        ? {
-                            options: [
-                              {
-                                icon: 'upload',
-                                label: organization.doc.organization_logo
-                                  ? __('Change Image')
-                                  : __('Upload Image'),
-                                onClick: openFileSelector,
-                              },
-                              {
-                                icon: 'trash-2',
-                                label: __('Remove Image'),
-                                onClick: () => changeOrganizationImage(''),
-                              },
-                            ],
-                          }
-                        : { onClick: openFileSelector }
-                    "
-                    class="!absolute bottom-0 left-0 right-0"
-                  >
-                    <div
-                      class="z-1 absolute bottom-0 left-0 right-0 flex h-14 cursor-pointer items-center justify-center rounded-b-full bg-black bg-opacity-40 pt-5 opacity-0 duration-300 ease-in-out group-hover:opacity-100"
-                      style="
-                        -webkit-clip-path: inset(22px 0 0 0);
-                        clip-path: inset(22px 0 0 0);
-                      "
-                    >
-                      <CameraIcon class="h-6 w-6 cursor-pointer text-white" />
-                    </div>
-                  </component>
-                </div>
-                <div class="flex flex-col gap-2 truncate">
-                  <div class="truncate text-3xl-medium text-ink-gray-9">
-                    <span>{{ organization.doc.name }}</span>
-                  </div>
+            <div class="flex items-center gap-3.5 px-5 pt-5">
+              <div class="group relative size-14 shrink-0">
+                <KanbanAvatar
+                  :image="organization.doc.organization_logo"
+                  :label="organization.doc.organization_name || organization.doc.name"
+                  size="xl"
+                  square
+                />
+                <component
+                  :is="organization.doc.organization_logo ? Dropdown : 'div'"
+                  v-bind="
+                    organization.doc.organization_logo
+                      ? {
+                          options: [
+                            { icon: 'upload', label: __('Change logo'), onClick: openFileSelector },
+                            { icon: 'trash-2', label: __('Remove logo'), onClick: () => changeOrganizationImage('') },
+                          ],
+                        }
+                      : {
+                          role: 'button',
+                          tabindex: 0,
+                          onClick: openFileSelector,
+                          onKeydown: (e) => ['Enter', ' '].includes(e.key) && (e.preventDefault(), openFileSelector()),
+                        }
+                  "
+                  class="!absolute inset-0 rounded-[10px]"
+                  :aria-label="__('Change logo')"
+                >
                   <div
-                    v-if="organization.doc.website"
-                    class="flex items-center gap-1.5 text-base text-ink-gray-8"
+                    class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-[10px] bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
                   >
-                    <WebsiteIcon class="size-4" />
-                    <span>{{ website(organization.doc.website) }}</span>
+                    <CameraIcon class="size-5 text-white" />
                   </div>
-                  <ErrorMessage :message="__(error)" />
-                </div>
+                </component>
               </div>
-              <div class="flex gap-1.5">
-                <Button
-                  v-if="canDelete"
-                  :label="__('Delete')"
-                  theme="red"
-                  size="sm"
-                  iconLeft="trash-2"
-                  @click="deleteOrganization()"
-                />
-                <Button
-                  :tooltip="__('Open Website')"
-                  icon="lucide-link"
-                  @click="openWebsite"
-                />
+              <div class="flex min-w-0 flex-col">
+                <h1 class="cp-name truncate">{{ organization.doc.name }}</h1>
+                <p v-if="headline" class="cp-sub line-clamp-2">{{ headline }}</p>
+                <ErrorMessage :message="__(error)" />
               </div>
             </div>
           </template>
         </FileUploader>
-      </div>
-      <div
-        v-if="sections.data"
-        class="flex flex-1 flex-col justify-between overflow-hidden"
-      >
-        <SidePanelLayout
-          :sections="sections.data"
-          doctype="CRM Organization"
-          :docname="organization.doc.name"
-          @reload="sections.reload"
-          @beforeFieldChange="beforeFieldChange"
-        />
+
+        <!-- Quick actions -->
+        <div class="cp-actions px-5 pb-5 pt-4">
+          <button
+            type="button"
+            class="cp-action"
+            :class="{ 'opacity-50': !organization.doc.website }"
+            :title="organization.doc.website ? __('Open website') : __('No website')"
+            @click="openWebsite"
+          >
+            <span class="cp-action-icon"><LucideGlobe /></span>
+            {{ __('Website') }}
+          </button>
+          <button type="button" class="cp-action" @click="showContactModal = true">
+            <span class="cp-action-icon"><LucideUserPlus /></span>
+            {{ __('Contact') }}
+          </button>
+          <button type="button" class="cp-action" @click="showDealModal = true">
+            <span class="cp-action-icon"><LucideHandshake /></span>
+            {{ __('Deal') }}
+          </button>
+          <Dropdown :options="moreActions" placement="left">
+            <button type="button" class="cp-action">
+              <span class="cp-action-icon"><LucideEllipsis /></span>
+              {{ __('More') }}
+            </button>
+          </Dropdown>
+        </div>
+
+        <!-- Company details -->
+        <section class="cp-section">
+          <button
+            type="button"
+            class="cp-section-head"
+            :aria-expanded="open.details"
+            @click="open.details = !open.details"
+          >
+            {{ __('Company details') }}
+            <LucideChevronDown />
+          </button>
+          <div v-show="open.details" class="cp-section-body">
+            <div v-if="organization.doc.website" class="cp-field">
+              <span class="cp-label">{{ __('Website') }}</span>
+              <div class="flex flex-wrap gap-1.5">
+                <a :href="websiteUrl" target="_blank" rel="noopener" class="cp-chip">
+                  <span class="truncate">{{ websiteLabel }}</span>
+                  <LucideArrowUpRight class="size-3 shrink-0" />
+                </a>
+              </div>
+            </div>
+            <div v-if="organization.doc.industry" class="cp-field">
+              <span class="cp-label">{{ __('Industry') }}</span>
+              <span class="cp-value">
+                <span class="kb-badge">
+                  <span class="size-1.5 rounded-full" :style="{ background: industryDot }" />
+                  {{ __(organization.doc.industry) }}
+                </span>
+              </span>
+            </div>
+            <div v-if="organization.doc.territory" class="cp-field">
+              <span class="cp-label">{{ __('Territory') }}</span>
+              <span class="cp-value">{{ organization.doc.territory }}</span>
+            </div>
+            <div v-if="organization.doc.no_of_employees" class="cp-field">
+              <span class="cp-label">{{ __('Employees') }}</span>
+              <span class="cp-value">{{ organization.doc.no_of_employees }}</span>
+            </div>
+            <div v-if="revenue" class="cp-field">
+              <span class="cp-label">{{ __('Annual revenue') }}</span>
+              <span class="cp-value tabular-nums">{{ revenue }}</span>
+            </div>
+            <div class="cp-field">
+              <span class="cp-label">{{ __('Added') }}</span>
+              <span class="cp-value">
+                {{ dayjsLocal(organization.doc.creation).format('MMM D, YYYY') }}
+                <template v-if="addedBy"> · {{ __('by {0}', [addedBy]) }}</template>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- All editable fields (the CRM's side panel, unchanged) -->
+        <section class="cp-section">
+          <button
+            type="button"
+            class="cp-section-head"
+            :aria-expanded="open.fields"
+            @click="open.fields = !open.fields"
+          >
+            {{ __('Edit fields') }}
+            <LucideChevronDown />
+          </button>
+          <div v-show="open.fields" class="pb-3">
+            <SidePanelLayout
+              v-if="sections.data"
+              :sections="sections.data"
+              doctype="CRM Organization"
+              :docname="organization.doc.name"
+              @reload="sections.reload"
+              @beforeFieldChange="beforeFieldChange"
+            />
+          </div>
+        </section>
       </div>
     </Resizer>
-    <Tabs
-      v-model="tabIndex"
-      as="div"
-      :tabs="tabs"
-      class="flex flex-1 overflow-hidden flex-col [&_[role='tablist']]:gap-7.5 [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
-    >
-      <template #tab-item="{ tab, selected }">
+
+    <!-- ================= Main area ================= -->
+    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div class="cp-tabs" role="tablist" :aria-label="__('Organization sections')">
         <button
-          class="group flex items-center gap-2 border-b border-transparent py-2.5 text-base text-ink-gray-5 duration-300 ease-in-out hover:text-ink-gray-9"
-          :class="{ 'text-ink-gray-9': selected }"
+          v-for="t in tabs"
+          :key="t.key"
+          type="button"
+          role="tab"
+          class="cp-tab"
+          :aria-selected="tab === t.key"
+          @click="tab = t.key"
         >
-          <component :is="tab.icon" v-if="tab.icon" class="h-5" />
-          {{ __(tab.label) }}
-          <Badge
-            class="group-hover:bg-surface-gray-10"
-            :class="[selected ? 'bg-surface-gray-10' : 'bg-gray-600']"
-            variant="solid"
-            theme="gray"
-            size="sm"
-          >
-            {{ tab.count }}
-          </Badge>
+          <component :is="t.icon" />
+          {{ t.label }}
+          <span v-if="t.count" class="cp-tab-count">{{ t.count }}</span>
         </button>
-      </template>
-      <template #tab-panel="{ tab }">
-        <DealsListView
-          v-if="tab.label === 'Deals' && rows.length"
-          class="mt-4"
-          :rows="rows"
-          :columns="columns"
-          :options="{ selectable: false, showTooltip: false }"
-        />
-        <ContactsListView
-          v-if="tab.label === 'Contacts' && rows.length"
-          class="mt-4"
-          :rows="rows"
-          :columns="columns"
-          :options="{ selectable: false, showTooltip: false }"
-        />
-        <EmptyState
-          v-if="!rows.length"
-          :icon="tab.icon"
-          :name="__(tab.label)"
-        />
-      </template>
-    </Tabs>
+      </div>
+
+      <div class="flex-1 overflow-y-auto">
+        <!-- Overview -->
+        <div v-if="tab === 'overview'" class="cp-main max-w-[860px]">
+          <section class="cp-block">
+            <h2 class="cp-h">{{ __('Company overview') }}</h2>
+            <dl class="cp-dl">
+              <template v-for="row in overviewRows" :key="row.label">
+                <dt>{{ row.label }}</dt>
+                <dd><span class="truncate">{{ row.value }}</span></dd>
+              </template>
+            </dl>
+          </section>
+
+          <section v-if="openDeals.length" class="cp-block">
+            <h2 class="cp-h">{{ __('Open deals') }}</h2>
+            <div v-for="d in openDeals" :key="d.name" class="cp-callout">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="truncate text-[13.5px] font-medium">{{ d.lead_name || d.name }}</span>
+                  <span class="kb-badge">
+                    <span class="size-1.5 rounded-full" :style="{ background: stageDot(d.status) }" />
+                    {{ __(d.status) }}
+                  </span>
+                </div>
+                <p class="cp-sub mt-0.5">
+                  {{ [money(d.deal_value, d.currency), d.probability ? __('{0}% probability', [Math.round(d.probability)]) : '', d.expected_closure_date ? __('closes {0}', [dayjsLocal(d.expected_closure_date).format('MMM D, YYYY')]) : ''].filter(Boolean).join(' • ') }}
+                </p>
+              </div>
+              <router-link :to="{ name: 'Deal', params: { dealId: d.name } }" class="cp-btn">
+                {{ __('Details') }}
+                <LucideChevronRight />
+              </router-link>
+            </div>
+          </section>
+
+          <section class="cp-block">
+            <div class="mb-3.5 flex items-center justify-between">
+              <h2 class="cp-h !mb-0">{{ __('People') }}</h2>
+              <button type="button" class="cp-btn" @click="showContactModal = true">
+                <LucidePlus /> {{ __('Add contact') }}
+              </button>
+            </div>
+            <p v-if="!contacts.data?.length" class="cp-empty">
+              {{ __('No contacts at this organization yet.') }}
+            </p>
+            <router-link
+              v-for="c in (contacts.data || []).slice(0, 5)"
+              :key="c.name"
+              :to="{ name: 'Contact', params: { contactId: c.name } }"
+              class="cp-card flex items-center gap-3"
+            >
+              <KanbanAvatar :image="c.image" :label="c.full_name || c.name" size="md" />
+              <span class="flex min-w-0 flex-1 flex-col">
+                <span class="truncate text-[13.5px] font-medium">{{ c.full_name || c.name }}</span>
+                <span class="cp-sub truncate">{{ [c.designation, c.email_id].filter(Boolean).join(' · ') }}</span>
+              </span>
+              <LucideChevronRight class="size-4 shrink-0" style="color: var(--kb-ink-3)" />
+            </router-link>
+            <button
+              v-if="(contacts.data?.length || 0) > 5"
+              type="button"
+              class="cp-more !mt-0"
+              @click="tab = 'contacts'"
+            >
+              {{ __('View all {0} contacts', [contacts.data.length]) }}
+              <LucideChevronRight />
+            </button>
+          </section>
+
+          <section class="cp-block">
+            <h2 class="cp-h">{{ __('Recent activity') }}</h2>
+            <ContactTimeline
+              :items="activity.slice(0, 5)"
+              :contactName="organization.doc.name"
+              @toggleTask="toggleTask"
+              @openTask="openTask"
+            />
+            <button
+              v-if="activity.length > 5"
+              type="button"
+              class="cp-more !mt-0"
+              @click="tab = 'activity'"
+            >
+              {{ __('View all activity') }}
+              <LucideChevronRight />
+            </button>
+          </section>
+        </div>
+
+        <!-- Activity -->
+        <div v-else-if="tab === 'activity'" class="cp-main max-w-[860px]">
+          <p class="cp-sub mb-4">
+            {{ __('Notes, tasks, emails and comments on this organization’s deals.') }}
+          </p>
+          <ContactTimeline
+            :items="activity"
+            :contactName="organization.doc.name"
+            @toggleTask="toggleTask"
+            @openTask="openTask"
+          />
+        </div>
+
+        <!-- Deals (existing list) -->
+        <div v-else-if="tab === 'deals'" class="flex h-full flex-col">
+          <div class="cp-main !pb-0 flex items-center justify-between">
+            <h2 class="cp-h !mb-0">{{ __('Deals') }}</h2>
+            <button type="button" class="cp-btn is-primary" @click="showDealModal = true">
+              <LucidePlus /> {{ __('New deal') }}
+            </button>
+          </div>
+          <DealsListView
+            v-if="dealRows.length"
+            class="mt-2"
+            :rows="dealRows"
+            :columns="dealColumns"
+            :options="{ selectable: false, showTooltip: false }"
+          />
+          <p v-else class="cp-main cp-empty">{{ __('No deals with this organization yet.') }}</p>
+        </div>
+
+        <!-- Contacts (existing list) -->
+        <div v-else-if="tab === 'contacts'" class="flex h-full flex-col">
+          <div class="cp-main !pb-0 flex items-center justify-between">
+            <h2 class="cp-h !mb-0">{{ __('Contacts') }}</h2>
+            <button type="button" class="cp-btn is-primary" @click="showContactModal = true">
+              <LucidePlus /> {{ __('New contact') }}
+            </button>
+          </div>
+          <ContactsListView
+            v-if="contactRows.length"
+            class="mt-2"
+            :rows="contactRows"
+            :columns="contactColumns"
+            :options="{ selectable: false, showTooltip: false }"
+          />
+          <p v-else class="cp-main cp-empty">{{ __('No contacts at this organization yet.') }}</p>
+        </div>
+      </div>
+    </div>
   </div>
+
   <ErrorPage
     v-else-if="errorTitle"
     :errorTitle="errorTitle"
@@ -175,9 +352,33 @@
     :docname="props.organizationId"
     name="Organizations"
   />
+  <ContactModal
+    v-if="showContactModal"
+    v-model="showContactModal"
+    :contact="{ company_name: props.organizationId }"
+    :options="{ redirect: false, afterInsert: () => contacts.reload() }"
+  />
+  <DealModal
+    v-if="showDealModal"
+    v-model="showDealModal"
+    :defaults="{ organization: props.organizationId }"
+  />
 </template>
 
 <script setup>
+import '@/components/Kanban/kanban.css'
+import '@/components/ContactProfile/profile.css'
+import LucideGlobe from '~icons/lucide/globe'
+import LucideUserPlus from '~icons/lucide/user-plus'
+import LucideHandshake from '~icons/lucide/handshake'
+import LucideEllipsis from '~icons/lucide/ellipsis'
+import LucideChevronDown from '~icons/lucide/chevron-down'
+import LucideChevronRight from '~icons/lucide/chevron-right'
+import LucideArrowUpRight from '~icons/lucide/arrow-up-right'
+import LucidePlus from '~icons/lucide/plus'
+import LucideLayoutGrid from '~icons/lucide/layout-grid'
+import LucideActivity from '~icons/lucide/activity'
+import LucideUsers from '~icons/lucide/users'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Resizer from '@/components/Resizer.vue'
 import SidePanelLayout from '@/components/SidePanelLayout.vue'
@@ -185,12 +386,14 @@ import Icon from '@/components/Icon.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
 import DealsListView from '@/components/ListViews/DealsListView.vue'
 import ContactsListView from '@/components/ListViews/ContactsListView.vue'
-import WebsiteIcon from '@/components/Icons/WebsiteIcon.vue'
 import CameraIcon from '@/components/Icons/CameraIcon.vue'
-import DealsIcon from '@/components/Icons/DealsIcon.vue'
-import ContactsIcon from '@/components/Icons/ContactsIcon.vue'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import CustomActions from '@/components/CustomActions.vue'
+import ContactModal from '@/components/Modals/ContactModal.vue'
+import DealModal from '@/components/Modals/DealModal.vue'
+import KanbanAvatar from '@/components/Kanban/KanbanAvatar.vue'
+import ContactTimeline from '@/components/ContactProfile/ContactTimeline.vue'
+import { getStageTone } from '@/components/Kanban/stageTones'
 import { useDocument } from '@/data/document'
 import { getSettings } from '@/stores/settings'
 import { globalStore } from '@/stores/global'
@@ -201,24 +404,25 @@ import { getView } from '@/utils/view'
 import {
   validateIsImageFile,
   setupCustomizations,
+  copyToClipboard,
   openWebsite as openExternalWebsite,
 } from '@/utils'
 import { timestampCell } from '@/composables/useTimelinePreferences'
 import {
   Breadcrumbs,
-  Avatar,
   FileUploader,
   Dropdown,
-  Tabs,
   createListResource,
   usePageMeta,
   createResource,
+  dayjsLocal,
   toast,
   call,
 } from 'frappe-ui'
 import { useDoctypeModal } from '@/composables/doctypeModal'
+import { usePipelineSurface } from '@/composables/usePipelineSurface'
 import { useTelemetry } from 'frappe-ui/frappe'
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, reactive, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
@@ -239,6 +443,10 @@ const errorTitle = ref('')
 const errorMessage = ref('')
 
 const showDeleteLinkedDocModal = ref(false)
+const showContactModal = ref(false)
+const showDealModal = ref(false)
+const open = reactive({ details: true, fields: false })
+usePipelineSurface()
 
 const {
   document: organization,
@@ -325,10 +533,6 @@ function beforeFieldChange(data) {
   }
 }
 
-function website(url) {
-  return url && url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
-}
-
 function openWebsite() {
   if (!organization.doc.website) {
     toast.error(__('No Website Found'))
@@ -337,6 +541,71 @@ function openWebsite() {
 
   openExternalWebsite(organization.doc.website)
 }
+
+// ---- Profile header / details (custom, matches the contact page) ----
+
+const websiteUrl = computed(() => {
+  const w = organization.doc?.website || ''
+  return /^https?:\/\//.test(w) ? w : `https://${w}`
+})
+const websiteLabel = computed(() =>
+  (organization.doc?.website || '')
+    .replace(/^(?:https?:\/\/)?(?:www\.)?/i, '')
+    .replace(/\/$/, ''),
+)
+const headline = computed(() =>
+  [organization.doc?.industry && __(organization.doc.industry), websiteLabel.value]
+    .filter(Boolean)
+    .join(' · '),
+)
+const industryDot = computed(
+  () => getStageTone('CRM Organization', { name: organization.doc?.industry }).dot,
+)
+const addedBy = computed(() => {
+  const owner = organization.doc?.owner
+  return owner ? getUser(owner)?.full_name || owner : ''
+})
+
+function money(value, currency) {
+  if (!value) return ''
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency || 'USD',
+      notation: value >= 1e6 ? 'compact' : 'standard',
+      maximumFractionDigits: value >= 1e6 ? 1 : 0,
+    }).format(value)
+  } catch {
+    return `${currency || ''} ${value}`
+  }
+}
+const revenue = computed(() =>
+  money(organization.doc?.annual_revenue, organization.doc?.currency),
+)
+
+function stageDot(status) {
+  return getStageTone('CRM Deal', { name: status }, getDealStatus(status)).dot
+}
+
+const moreActions = computed(() => [
+  {
+    group: __('Actions'),
+    hideLabel: true,
+    items: [
+      {
+        label: __('Copy name'),
+        icon: 'copy',
+        onClick: () => copyToClipboard(props.organizationId),
+      },
+      canDelete.value && {
+        label: __('Delete'),
+        icon: 'trash-2',
+        theme: 'red',
+        onClick: deleteOrganization,
+      },
+    ].filter(Boolean),
+  },
+])
 
 const sections = createResource({
   url: 'crm.fcrm.doctype.crm_fields_layout.crm_fields_layout.get_sidepanel_sections',
@@ -369,20 +638,6 @@ function getParsedSections(_sections) {
   })
 }
 
-const tabIndex = ref(0)
-const tabs = [
-  {
-    label: 'Deals',
-    icon: DealsIcon,
-    count: computed(() => deals.data?.length),
-  },
-  {
-    label: 'Contacts',
-    icon: ContactsIcon,
-    count: computed(() => contacts.data?.length),
-  },
-]
-
 const deals = createListResource({
   type: 'list',
   doctype: 'CRM Deal',
@@ -390,8 +645,11 @@ const deals = createListResource({
   fields: [
     'name',
     'organization',
+    'lead_name',
     'currency',
     'deal_value',
+    'probability',
+    'expected_closure_date',
     'status',
     'email',
     'mobile_no',
@@ -415,6 +673,7 @@ const contacts = createListResource({
     'full_name',
     'image',
     'email_id',
+    'designation',
     'mobile_no',
     'company_name',
     'modified',
@@ -427,21 +686,119 @@ const contacts = createListResource({
   auto: true,
 })
 
-const rows = computed(() => {
-  let list = !tabIndex.value ? deals : contacts
+const statusType = (d) => getDealStatus(d.status)?.type
+const openDeals = computed(() =>
+  (deals.data || []).filter((d) => ['Open', 'Ongoing'].includes(statusType(d))),
+)
+const wonDeals = computed(() => (deals.data || []).filter((d) => statusType(d) === 'Won'))
 
-  if (!list.data) return []
+function sumValues(list) {
+  if (!list.length) return ''
+  const total = list.reduce((s, d) => s + (d.deal_value || 0), 0)
+  return money(total, list[0].currency)
+}
 
-  return list.data.map((row) => {
-    return !tabIndex.value ? getDealRowObject(row) : getContactRowObject(row)
-  })
-})
+const overviewRows = computed(() =>
+  [
+    { label: __('Contacts'), value: contacts.data?.length ?? 0 },
+    { label: __('Open deals'), value: openDeals.value.length },
+    { label: __('Pipeline value'), value: sumValues(openDeals.value) },
+    { label: __('Won deals'), value: wonDeals.value.length },
+    { label: __('Won value'), value: sumValues(wonDeals.value) },
+  ].filter((r) => r.value !== ''),
+)
+
+// ---- Tabs ----
+
+const tab = ref('overview')
+const tabs = computed(() => [
+  { key: 'overview', label: __('Overview'), icon: LucideLayoutGrid },
+  { key: 'activity', label: __('Activity'), icon: LucideActivity },
+  { key: 'deals', label: __('Deals'), icon: LucideHandshake, count: deals.data?.length },
+  { key: 'contacts', label: __('Contacts'), icon: LucideUsers, count: contacts.data?.length },
+])
+
+// ---- Activity: notes, tasks, emails and comments on this organization's deals ----
+
+const activity = ref([])
+
+function stripHtml(html) {
+  const el = window.document.createElement('div')
+  el.innerHTML = html || ''
+  return (el.textContent || '').trim()
+}
+
+async function loadActivity() {
+  const dealNames = (deals.data || []).map((d) => d.name)
+  if (!dealNames.length) {
+    activity.value = []
+    return
+  }
+  const onDeals = { reference_doctype: 'CRM Deal' }
+  const list = (args) => call('frappe.client.get_list', { limit_page_length: 50, ...args }).catch(() => [])
+  const [notes, tasks, emails, comments] = await Promise.all([
+    list({
+      doctype: 'FCRM Note',
+      fields: ['name', 'title', 'content', 'owner', 'creation', 'reference_docname'],
+      filters: { ...onDeals, reference_docname: ['in', dealNames] },
+      order_by: 'creation desc',
+    }),
+    list({
+      doctype: 'CRM Task',
+      fields: ['name', 'title', 'status', 'priority', 'due_date', 'owner', 'creation', 'reference_docname'],
+      filters: { ...onDeals, reference_docname: ['in', dealNames] },
+      order_by: 'creation desc',
+    }),
+    list({
+      doctype: 'Communication',
+      fields: ['name', 'subject', 'sent_or_received', 'sender', 'communication_date', 'reference_name'],
+      filters: { ...onDeals, reference_name: ['in', dealNames], communication_medium: 'Email' },
+      order_by: 'communication_date desc',
+    }),
+    list({
+      doctype: 'Comment',
+      fields: ['name', 'content', 'owner', 'creation', 'reference_name'],
+      filters: { ...onDeals, reference_name: ['in', dealNames], comment_type: 'Comment' },
+      order_by: 'creation desc',
+    }),
+  ])
+  const ref_doctype = 'CRM Deal'
+  activity.value = [
+    ...notes.map((n) => ({ type: 'note', name: n.name, title: n.title, text: stripHtml(n.content), by: n.owner, time: n.creation, ref_doctype, ref_name: n.reference_docname })),
+    ...tasks.map((t) => ({ type: 'task', name: t.name, title: t.title, status: t.status, priority: t.priority, due_date: t.due_date, by: t.owner, time: t.creation, ref_doctype, ref_name: t.reference_docname })),
+    ...emails.map((e) => ({ type: 'email', name: e.name, title: e.subject, direction: e.sent_or_received, from: e.sender, time: e.communication_date, ref_doctype, ref_name: e.reference_name })),
+    ...comments.map((c) => ({ type: 'comment', name: c.name, text: stripHtml(c.content), by: c.owner, time: c.creation, ref_doctype, ref_name: c.reference_name })),
+  ].sort((a, b) => new Date(b.time) - new Date(a.time))
+}
+watch(() => deals.data, loadActivity, { immediate: true })
+
+async function toggleTask(task, done) {
+  const status = done ? 'Done' : 'Todo'
+  const prev = task.status
+  task.status = status
+  try {
+    await call('frappe.client.set_value', {
+      doctype: 'CRM Task',
+      name: task.name,
+      fieldname: 'status',
+      value: status,
+    })
+  } catch (e) {
+    task.status = prev
+    toast.error(e?.messages?.[0] || __('Could not update the task'))
+  }
+}
+
+function openTask(task) {
+  router.push({ name: 'Deal', params: { dealId: task.ref_name }, hash: '#tasks' })
+}
+
+// ---- Deals / contacts tables (unchanged list views) ----
+
+const dealRows = computed(() => (deals.data || []).map(getDealRowObject))
+const contactRows = computed(() => (contacts.data || []).map(getContactRowObject))
 
 const { getFormattedCurrency } = getMeta('CRM Deal')
-
-const columns = computed(() => {
-  return tabIndex.value === 0 ? dealColumns : contactColumns
-})
 
 function getDealRowObject(deal) {
   return {

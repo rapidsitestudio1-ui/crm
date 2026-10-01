@@ -86,3 +86,13 @@ class CRMOrganization(Document):
 			"modified",
 		]
 		return {"columns": columns, "rows": rows}
+
+	@staticmethod
+	def default_kanban_settings():
+		# Organizations board: grouped by Industry by default (any Link/Select
+		# field can be picked in Kanban settings).
+		return {
+			"column_field": "industry",
+			"title_field": "organization_name",
+			"kanban_fields": '["website", "annual_revenue", "modified"]',
+		}

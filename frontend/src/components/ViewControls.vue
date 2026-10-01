@@ -1055,12 +1055,19 @@ function persistCustomView() {
 }
 
 function updateKanbanSettings(data) {
-  if (data.item && data.to) {
+  if (data.item && data.to !== undefined) {
+    // Custom: if saving the move fails (permissions, validation, a workflow
+    // rule), say why and reload so the card goes back to its real column.
     call('frappe.client.set_value', {
       doctype: props.doctype,
       name: data.item,
       fieldname: view.value.column_field,
       value: data.to,
+    }).catch((e) => {
+      toast.error(
+        e?.messages?.[0] || e?.message || __('Could not move this record'),
+      )
+      reload()
     })
     return
   }
