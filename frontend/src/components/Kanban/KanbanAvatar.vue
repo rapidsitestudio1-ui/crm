@@ -3,7 +3,7 @@
     v-if="image"
     :image="image"
     :label="label"
-    :size="size === 'md' ? 'lg' : size === 'sm' ? 'sm' : 'xs'"
+    :size="{ xl: '3xl', md: 'lg', sm: 'sm' }[size] || 'xs'"
     :shape="square ? 'square' : 'circle'"
   />
   <span
@@ -32,11 +32,11 @@ import { avatarTone, initialsOf } from './stageTones'
 const props = defineProps({
   image: { type: String, default: '' },
   label: { type: String, default: '' },
-  size: { type: String, default: 'md' }, // md 32, sm 24, xs 20
+  size: { type: String, default: 'md' }, // xl 56, md 32, sm 24, xs 20
   square: { type: Boolean, default: false },
 })
 
-const px = computed(() => ({ md: 32, sm: 24, xs: 20 })[props.size] || 32)
-const fontPx = computed(() => ({ md: 12, sm: 10, xs: 9 })[props.size] || 12)
+const px = computed(() => ({ xl: 56, md: 32, sm: 24, xs: 20 })[props.size] || 32)
+const fontPx = computed(() => ({ xl: 19, md: 12, sm: 10, xs: 9 })[props.size] || 12)
 const tone = computed(() => avatarTone(props.label))
 </script>
