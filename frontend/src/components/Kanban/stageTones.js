@@ -33,6 +33,14 @@ const BY_NAME = {
     Won: 'emerald',
     Lost: 'red',
   },
+  // Contact Stage (custom field, patch add_contact_stage)
+  Contact: {
+    New: 'slate',
+    Contacted: 'blue',
+    Prospect: 'violet',
+    Customer: 'emerald',
+    Inactive: 'gray',
+  },
 }
 
 // In-progress stages that aren't known by name cycle through these by position.

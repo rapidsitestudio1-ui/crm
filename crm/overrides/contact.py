@@ -47,3 +47,12 @@ class CustomContact(Contact):
 			"image",
 		]
 		return {"columns": columns, "rows": rows}
+
+	@staticmethod
+	def default_kanban_settings():
+		# Contacts board: columns are the Stage custom field (patch add_contact_stage).
+		return {
+			"column_field": "contact_stage",
+			"title_field": "full_name",
+			"kanban_fields": '["company_name", "email_id", "mobile_no", "modified"]',
+		}

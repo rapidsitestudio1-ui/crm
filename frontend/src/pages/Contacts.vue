@@ -68,9 +68,72 @@
     v-model:updatedPageCount="updatedPageCount"
     doctype="Contact"
     :filters="pageFilters"
+    :options="{
+      allowedViews: ['list', 'kanban'],
+      kanbanColumnField: 'contact_stage',
+    }"
   />
+  <KanbanView
+    v-if="route.params.viewType == 'kanban'"
+    v-model="contacts"
+    :options="{
+      getRoute: (row) => ({
+        name: 'Contact',
+        params: { contactId: row.name },
+        query: { view: route.query.view, viewType: route.params.viewType },
+      }),
+      onNewClick: (column) => newContactIn(column),
+      doctype: 'Contact',
+      cardFields: contactCardFields,
+    }"
+    @update="(data) => viewControls.updateKanbanSettings(data)"
+    @loadMore="(columnName) => viewControls.loadMoreKanban(columnName)"
+  >
+    <template #card-header="{ fields, column }">
+      <KanbanCardHeader
+        :title="fields.full_name || fields.name"
+        :subtitle="fields.company_name || ''"
+        :image="fields.image || extras[fields.name]?.image || ''"
+        :email="column.fields?.includes('email_id') ? fields.email_id || '' : ''"
+        :phone="column.fields?.includes('mobile_no') ? fields.mobile_no || '' : ''"
+      >
+        <template #actions>
+          <Dropdown :options="cardActions(fields)" placement="right">
+            <button type="button" class="kb-icon-btn" :aria-label="__('Quick actions')">
+              <LucideMoreHorizontal class="size-4" />
+            </button>
+          </Dropdown>
+        </template>
+        <template v-if="relations.relationship(fields.name)" #badges>
+          <span
+            class="kb-badge"
+            :class="badgeClass(relations.relationship(fields.name))"
+          >
+            {{ relations.relationship(fields.name).label }}
+          </span>
+        </template>
+      </KanbanCardHeader>
+    </template>
+    <template #card-footer="{ fields, column }">
+      <KanbanCardFooter
+        :counts="{
+          email: fields._email_count,
+          note: fields._note_count,
+          task: fields._task_count,
+          comment: fields._comment_count,
+        }"
+        :owner="ownerOf(fields.owner || extras[fields.name]?.owner)"
+        :time="
+          column.fields?.includes('modified')
+            ? timestampCell(fields.modified).timeAgo
+            : ''
+        "
+        :timeTitle="timestampCell(fields.modified).label"
+      />
+    </template>
+  </KanbanView>
   <ContactsListView
-    v-if="contacts.data && rows.length"
+    v-else-if="contacts.data && rows.length"
     ref="contactsListView"
     v-model="contacts.data.page_length_count"
     v-model:list="contacts"
@@ -96,7 +159,7 @@
 
   <!-- Empty states: say why the list is empty and offer the way out. -->
   <div
-    v-else-if="contacts.data && !rows.length"
+    v-else-if="contacts.data && !rows.length && route.params.viewType !== 'kanban'"
     class="flex-1 overflow-y-auto bg-[var(--kb-card)]"
   >
     <div class="ct-empty" role="status">
@@ -127,7 +190,7 @@
   <ContactModal
     v-if="showContactModal"
     v-model="showContactModal"
-    :contact="{}"
+    :contact="newContactDefaults"
   />
 </template>
 
@@ -149,6 +212,13 @@ import ContactModal from '@/components/Modals/ContactModal.vue'
 import ContactsListView from '@/components/ListViews/ContactsListView.vue'
 import ContactPreview from '@/components/Contacts/ContactPreview.vue'
 import ViewControls from '@/components/ViewControls.vue'
+import KanbanView from '@/components/Kanban/KanbanView.vue'
+import KanbanCardHeader from '@/components/Kanban/KanbanCardHeader.vue'
+import KanbanCardFooter from '@/components/Kanban/KanbanCardFooter.vue'
+import LucideMoreHorizontal from '~icons/lucide/more-horizontal'
+import { usersStore } from '@/stores/users'
+import { Dropdown } from 'frappe-ui'
+import { useRoute, useRouter } from 'vue-router'
 import { getMeta } from '@/stores/meta'
 import { organizationsStore } from '@/stores/organizations.js'
 import { useContactRelations } from '@/composables/useContactRelations'
@@ -277,12 +347,75 @@ onBeforeUnmount(() => {
 // Fields the table shows that a saved column layout may not fetch.
 const extras = useKanbanExtras(
   'Contact',
-  () =>
-    contacts.value?.data?.data?.length
-      ? contacts.value.data.data.map((c) => c.name)
-      : null,
+  () => {
+    const d = contacts.value?.data
+    if (!d?.data?.length) return null
+    return d.view_type === 'kanban'
+      ? d.data.flatMap((col) => (col.data || []).map((c) => c.name))
+      : d.data.map((c) => c.name)
+  },
   ['owner', 'full_name', 'email_id', 'mobile_no', 'image'],
 )
+
+// ---- Kanban board (custom): columns are the Stage field ----
+
+const route = useRoute()
+const router = useRouter()
+const { getUser } = usersStore()
+
+// Fields the card header/footer already shows.
+const contactCardFields = [
+  'full_name',
+  'company_name',
+  'email_id',
+  'mobile_no',
+  'modified',
+  'contact_stage',
+  'image',
+]
+
+const newContactDefaults = ref({})
+function newContactIn(column) {
+  newContactDefaults.value = { contact_stage: column.column.name }
+  showContactModal.value = true
+}
+watch(showContactModal, (open) => {
+  if (!open) newContactDefaults.value = {}
+})
+
+function ownerOf(user) {
+  const u = user && getUser(user)
+  return u?.full_name ? { label: u.full_name, image: u.user_image } : null
+}
+
+function badgeClass(rel) {
+  return { success: 'is-success', accent: 'is-accent' }[rel?.tone] || ''
+}
+
+function cardActions(fields) {
+  return [
+    {
+      label: __('Preview'),
+      icon: 'sidebar',
+      onClick: () => (previewName.value = fields.name),
+    },
+    {
+      label: __('Open contact'),
+      icon: 'arrow-up-right',
+      onClick: () =>
+        router.push({ name: 'Contact', params: { contactId: fields.name } }),
+    },
+    ...(fields.email_id
+      ? [
+          {
+            label: __('Send email'),
+            icon: 'mail',
+            onClick: () => window.open(`mailto:${fields.email_id}`),
+          },
+        ]
+      : []),
+  ]
+}
 
 // ---- Rows ----
 

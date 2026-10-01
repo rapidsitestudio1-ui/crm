@@ -452,7 +452,7 @@ const view = ref({
   icon: '',
   filters: {},
   order_by: 'modified desc',
-  column_field: 'status',
+  column_field: props.options.kanbanColumnField || 'status',
   title_field: '',
   kanban_columns: '',
   kanban_fields: '',
@@ -490,7 +490,10 @@ function getParams() {
   const group_by_field = _view?.group_by_field || 'owner'
   const columns = _view?.columns || ''
   const rows = _view?.rows || ''
-  const column_field = _view?.column_field || 'status'
+  // Custom: a page can set its board's default column field (Contacts:
+  // contact_stage); Leads/Deals keep the 'status' default.
+  const column_field =
+    _view?.column_field || props.options.kanbanColumnField || 'status'
   const title_field = _view?.title_field || ''
   const kanban_columns = _view?.kanban_columns || ''
   const kanban_fields = _view?.kanban_fields || ''
@@ -573,7 +576,7 @@ listResource = createResource({
 // record of their doctype is created, changed or deleted, by anyone. Frappe
 // emits "list_update" to sockets subscribed to the doctype; debounced so a
 // burst of changes (e.g. a bulk edit) causes one reload.
-const LIVE_DOCTYPES = ['CRM Lead', 'CRM Deal']
+const LIVE_DOCTYPES = ['CRM Lead', 'CRM Deal', 'Contact']
 let liveTimer
 function onListUpdate(data) {
   if (data?.doctype !== props.doctype) return
