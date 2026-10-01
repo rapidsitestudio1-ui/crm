@@ -1,0 +1,228 @@
+/* Overview dashboard, copied from Figma "CRM Dashboard" (frame 593:1449).
+   Light values are the Figma ones; dark values are our own. */
+
+.ov-root {
+  --ov-page: #f6f7f9;
+  --ov-card: #ffffff;
+  --ov-card-border: rgba(233, 235, 241, 0.7);
+  --ov-ink: #0b0c0e;
+  --ov-ink-muted: #606a7e;
+  --ov-ink-axis: #657086;
+  --ov-ink-table: #4d5870;
+  --ov-ink-count: #334057;
+  --ov-ink-pct: #667188;
+  --ov-ink-time: #798397;
+  --ov-link: #3530d5;
+  --ov-up: #00b945;
+  --ov-down: #d92d20;
+  --ov-grid: #edf0f4;
+  --ov-select-border: #dce0e9;
+  --ov-divider: #dde1eb;
+  --ov-row-border: #e9ebf1;
+  --ov-th-bg: #f5f6f9;
+  --ov-hover: #f5f6f9;
+  --ov-checkbox: #767676;
+  --ov-task-bg: #ffeded;
+  --ov-task-ink: #bc1818;
+  --ov-avatar-bg: #e9e7ff;
+  --ov-avatar-ink: #3830d6;
+
+  /* KPI and activity icon chips */
+  --ov-chip-blue: #e2eeff;
+  --ov-chip-orange: #ffeadb;
+  --ov-chip-amber: #fff0df;
+  --ov-chip-violet: #e8e5ff;
+  --ov-chip-lead: #e8e6ff;
+  --ov-chip-deal: #f1f2f2;
+  --ov-chip-whatsapp: #def8e8;
+  --ov-chip-email: #fff4e9;
+  --ov-chip-note: #e5f0ff;
+
+  /* Lead status pills */
+  --ov-pill-blue-bg: #e0efff;
+  --ov-pill-blue-ink: #174695;
+  --ov-pill-orange-bg: #ffede4;
+  --ov-pill-orange-ink: #b13b06;
+  --ov-pill-violet-bg: #ebe7ff;
+  --ov-pill-violet-ink: #4430d9;
+  --ov-pill-green-bg: #ddf5e9;
+  --ov-pill-green-ink: #087747;
+  --ov-pill-gray-bg: #eef0f3;
+  --ov-pill-gray-ink: #4d5870;
+  --ov-pill-red-bg: #ffeded;
+  --ov-pill-red-ink: #bc1818;
+
+  background: var(--ov-page);
+  color: var(--ov-ink);
+}
+
+[data-theme='dark'] .ov-root {
+  --ov-page: #111113;
+  --ov-card: #1b1b1e;
+  --ov-card-border: rgba(255, 255, 255, 0.07);
+  --ov-ink: #f2f3f5;
+  --ov-ink-muted: #a3aab8;
+  --ov-ink-axis: #8d95a5;
+  --ov-ink-table: #b8bfcc;
+  --ov-ink-count: #c9ceda;
+  --ov-ink-pct: #a3aab8;
+  --ov-ink-time: #8d95a5;
+  --ov-link: #9b97ff;
+  --ov-up: #2ed573;
+  --ov-down: #ff6b5f;
+  --ov-grid: #2a2c31;
+  --ov-select-border: #34363c;
+  --ov-divider: #2f3137;
+  --ov-row-border: #2a2c31;
+  --ov-th-bg: #232428;
+  --ov-hover: #232428;
+  --ov-checkbox: #8d95a5;
+  --ov-task-bg: rgba(255, 92, 92, 0.14);
+  --ov-task-ink: #ff8a8a;
+  --ov-avatar-bg: rgba(130, 117, 255, 0.2);
+  --ov-avatar-ink: #b8b2ff;
+
+  --ov-chip-blue: rgba(77, 165, 255, 0.18);
+  --ov-chip-orange: rgba(255, 140, 60, 0.18);
+  --ov-chip-amber: rgba(255, 170, 60, 0.18);
+  --ov-chip-violet: rgba(130, 117, 255, 0.2);
+  --ov-chip-lead: rgba(130, 117, 255, 0.2);
+  --ov-chip-deal: rgba(255, 255, 255, 0.1);
+  --ov-chip-whatsapp: rgba(8, 199, 130, 0.18);
+  --ov-chip-email: rgba(255, 170, 60, 0.18);
+  --ov-chip-note: rgba(77, 165, 255, 0.18);
+
+  --ov-pill-blue-bg: rgba(77, 165, 255, 0.16);
+  --ov-pill-blue-ink: #8cc4ff;
+  --ov-pill-orange-bg: rgba(255, 120, 50, 0.16);
+  --ov-pill-orange-ink: #ffa877;
+  --ov-pill-violet-bg: rgba(130, 117, 255, 0.2);
+  --ov-pill-violet-ink: #b8b2ff;
+  --ov-pill-green-bg: rgba(8, 199, 130, 0.16);
+  --ov-pill-green-ink: #5fe0ad;
+  --ov-pill-gray-bg: rgba(255, 255, 255, 0.08);
+  --ov-pill-gray-ink: #b8bfcc;
+  --ov-pill-red-bg: rgba(255, 92, 92, 0.14);
+  --ov-pill-red-ink: #ff8a8a;
+}
+
+.ov-card {
+  background: var(--ov-card);
+  border: 1px solid var(--ov-card-border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(24, 32, 56, 0.04);
+}
+
+.ov-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22.5px;
+  letter-spacing: -0.2px;
+  color: var(--ov-ink);
+  white-space: nowrap;
+}
+
+.ov-subtitle {
+  font-size: 11px;
+  line-height: 16.5px;
+  color: var(--ov-ink-muted);
+}
+
+.ov-big-value {
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 32px;
+  color: var(--ov-ink);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--ov-select-border);
+  border-radius: 6px;
+  background: var(--ov-card);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ov-ink);
+  white-space: nowrap;
+}
+
+.ov-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--ov-link);
+  white-space: nowrap;
+}
+
+.ov-checkbox {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  border: 1px solid var(--ov-checkbox);
+  border-radius: 2px;
+  background: var(--ov-card);
+  accent-color: #625bff;
+  cursor: pointer;
+}
+
+.ov-chip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+}
+
+.ov-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 15px;
+  white-space: nowrap;
+}
+.ov-pill::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: currentColor;
+}
+.ov-pill-blue { background: var(--ov-pill-blue-bg); color: var(--ov-pill-blue-ink); }
+.ov-pill-orange { background: var(--ov-pill-orange-bg); color: var(--ov-pill-orange-ink); }
+.ov-pill-violet { background: var(--ov-pill-violet-bg); color: var(--ov-pill-violet-ink); }
+.ov-pill-green { background: var(--ov-pill-green-bg); color: var(--ov-pill-green-ink); }
+.ov-pill-gray { background: var(--ov-pill-gray-bg); color: var(--ov-pill-gray-ink); }
+.ov-pill-red { background: var(--ov-pill-red-bg); color: var(--ov-pill-red-ink); }
+
+.ov-empty {
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--ov-ink-muted);
+}
+
+.ov-chart-tooltip {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--ov-card-border);
+  border-radius: 8px;
+  background: var(--ov-card);
+  box-shadow: 0 4px 16px rgba(24, 32, 56, 0.12);
+  font-size: 11px;
+  line-height: 16.5px;
+  color: var(--ov-ink);
+}
