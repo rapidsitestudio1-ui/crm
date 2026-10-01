@@ -1,4 +1,4 @@
-import { dayjs } from 'frappe-ui'
+import { dayjs, dayjsLocal } from 'frappe-ui'
 
 export type Point = [number, number]
 
@@ -81,7 +81,7 @@ export function formatCount(value: number): string {
 // "2h ago", "1d ago", as in the Figma activity list and leads table.
 export function shortAgo(date: string): string {
   if (!date) return ''
-  const mins = Math.max(0, dayjs().diff(dayjs(date), 'minute'))
+  const mins = Math.max(0, dayjs().diff(dayjsLocal(date), 'minute'))
   if (mins < 1) return __('just now')
   if (mins < 60) return __('{0}m ago', [mins])
   const hours = Math.floor(mins / 60)

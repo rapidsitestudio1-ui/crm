@@ -270,9 +270,10 @@ def _activity(user):
 
 	deal_cond = "AND d.deal_owner = %(user)s" if user else ""
 	for r in frappe.db.sql(
-		f"""SELECT c.parent, c.to, COALESCE(c.from_date, c.creation) t, d.organization
+		f"""SELECT c.parent, c.to, COALESCE(c.to_date, c.creation) t, d.organization
 		FROM `tabCRM Status Change Log` c JOIN `tabCRM Deal` d ON d.name = c.parent
-		WHERE c.parenttype = 'CRM Deal' AND IFNULL(c.from, '') != '' {deal_cond}
+		WHERE c.parenttype = 'CRM Deal' AND IFNULL(c.from, '') != '' AND IFNULL(c.to, '') != ''
+		{deal_cond}
 		ORDER BY t DESC LIMIT {limit}""",
 		{"user": user},
 		as_dict=True,

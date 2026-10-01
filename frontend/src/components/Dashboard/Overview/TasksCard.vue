@@ -40,7 +40,7 @@
             class="rounded-[6px] px-2 py-[3px] text-[12px] leading-[18px] whitespace-nowrap"
             style="background: var(--ov-task-bg); color: var(--ov-task-ink)"
           >
-            {{ dayjs(task.due_date).format('h:mm A') }}
+            {{ dayjsLocal(task.due_date).format('h:mm A') }}
           </span>
         </div>
       </div>
@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { call, dayjs, toast } from 'frappe-ui'
+import { call, dayjsLocal, toast } from 'frappe-ui'
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import CardHeading from './CardHeading.vue'
