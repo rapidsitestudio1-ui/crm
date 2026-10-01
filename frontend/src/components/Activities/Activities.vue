@@ -861,5 +861,12 @@ function scroll(hash) {
   }, 500)
 }
 
-defineExpose({ emailBox, all_activities, changeTabTo })
+defineExpose({
+  emailBox,
+  all_activities,
+  changeTabTo,
+  // Custom: lets the page header's Note / Task buttons open the same modals.
+  showNote: () => modalRef.value?.showNote(),
+  showTask: () => modalRef.value?.showTask(),
+})
 </script>

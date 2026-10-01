@@ -143,6 +143,8 @@ const attachments = useStorage(
 )
 
 const subject = computed(() => {
+  // Custom: on contact pages the user writes their own subject.
+  if (props.doctype === 'Contact') return ''
   let prefix = ''
   if (doc.value?.lead_name) {
     prefix = doc.value.lead_name

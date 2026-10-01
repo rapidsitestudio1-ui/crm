@@ -49,142 +49,101 @@
       </Tooltip>
     </template>
   </LayoutHeader>
-  <div v-if="doc.name" class="flex h-full overflow-hidden">
-    <Tabs
-      v-model="tabIndex"
-      :tabs="tabs"
-      class="flex flex-1 overflow-hidden flex-col [&_[role='tab']]:px-0 [&_[role='tab']]:shrink-0 [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tablist']]:gap-7.5 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
-    >
-      <template #tab-panel>
-        <Activities
-          ref="activities"
-          v-model:reload="reload"
-          v-model:tabIndex="tabIndex"
-          doctype="CRM Lead"
-          :docname="leadId"
-          :tabs="tabs"
-          @beforeSave="beforeStatusChange"
-          @afterSave="reloadResources"
-        />
-      </template>
-    </Tabs>
-    <Resizer class="flex flex-col justify-between border-l" side="right">
-      <div
-        class="flex h-[45px] cursor-copy items-center border-b px-5 py-2.5 text-lg-medium text-ink-gray-9"
-        @click="copyToClipboard(leadId)"
-      >
-        {{ __(leadId) }}
-      </div>
+  <div v-if="doc.name" class="cp-root rp-page flex h-full overflow-hidden">
+    <Resizer class="cp-side flex flex-col justify-between">
       <FileUploader
         :validateFile="validateIsImageFile"
         @success="(file) => updateField('image', file.file_url)"
       >
-        <template #default="{ openFileSelector }">
-          <div class="flex items-center justify-start gap-5 border-b p-5">
-            <div class="group relative size-12">
-              <Avatar
-                size="3xl"
-                class="size-12"
-                :label="title"
-                :image="doc.image"
-              />
+        <template #default="{ openFileSelector, error: uploadError }">
+          <div class="flex items-center gap-3.5 px-5 pt-5">
+            <div class="group relative size-14 shrink-0">
+              <KanbanAvatar :image="doc.image" :label="title" size="xl" />
               <component
                 :is="doc.image ? Dropdown : 'div'"
                 v-bind="
                   doc.image
                     ? {
                         options: [
-                          {
-                            icon: 'upload',
-                            label: doc.image
-                              ? __('Change Image')
-                              : __('Upload Image'),
-                            onClick: openFileSelector,
-                          },
-                          {
-                            icon: 'trash-2',
-                            label: __('Remove Image'),
-                            onClick: () => updateField('image', ''),
-                          },
+                          { icon: 'upload', label: __('Change Image'), onClick: openFileSelector },
+                          { icon: 'trash-2', label: __('Remove Image'), onClick: () => updateField('image', '') },
                         ],
                       }
-                    : { onClick: openFileSelector }
+                    : {
+                        role: 'button',
+                        tabindex: 0,
+                        onClick: openFileSelector,
+                        onKeydown: (e) => ['Enter', ' '].includes(e.key) && (e.preventDefault(), openFileSelector()),
+                      }
                 "
-                class="!absolute bottom-0 left-0 right-0"
+                class="!absolute inset-0 rounded-full"
+                :aria-label="__('Change photo')"
               >
                 <div
-                  class="z-1 absolute bottom-0.5 left-0 right-0.5 flex h-9 cursor-pointer items-center justify-center rounded-b-full bg-black bg-opacity-40 pt-3 opacity-0 duration-300 ease-in-out group-hover:opacity-100"
-                  style="
-                    -webkit-clip-path: inset(12px 0 0 0);
-                    clip-path: inset(12px 0 0 0);
-                  "
+                  class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
                 >
-                  <CameraIcon class="size-4 cursor-pointer text-white" />
+                  <CameraIcon class="size-5 text-white" />
                 </div>
               </component>
             </div>
-            <div class="flex flex-col gap-2.5 truncate">
+            <div class="flex min-w-0 flex-col">
               <Tooltip :text="doc.lead_name || __('Set First Name')">
-                <div class="truncate text-3xl-medium text-ink-gray-9">
-                  {{ title }}
-                </div>
+                <h1 class="cp-name truncate">{{ title }}</h1>
               </Tooltip>
-              <div class="flex gap-1.5">
-                <Button
-                  v-if="callEnabled"
-                  :tooltip="__('Make a Call')"
-                  :icon="PhoneIcon"
-                  @click="
-                    () =>
-                      doc.mobile_no
-                        ? makeCall(doc.mobile_no)
-                        : toast.error(
-                            __('Please set a mobile number to make calls'),
-                          )
-                  "
-                />
-
-                <Button
-                  :tooltip="__('Send an Email')"
-                  :icon="Email2Icon"
-                  @click="
-                    doc.email
-                      ? openEmailBox()
-                      : toast.error(
-                          __('Please set an email address to send emails'),
-                        )
-                  "
-                />
-                <Button
-                  :tooltip="__('Go to Website')"
-                  :icon="LinkIcon"
-                  @click="
-                    doc.website
-                      ? openWebsite(doc.website)
-                      : toast.error(__('Please set a website to visit'))
-                  "
-                />
-
-                <Button
-                  :tooltip="__('Attach a File')"
-                  :icon="AttachmentIcon"
-                  @click="showFilesUploader = true"
-                />
-
-                <Button
-                  v-if="canDelete"
-                  :tooltip="__('Delete')"
-                  variant="subtle"
-                  theme="red"
-                  icon="lucide-trash-2"
-                  @click="deleteLead"
-                />
-              </div>
-              <ErrorMessage :message="__(error)" />
+              <p v-if="headerSubtitle" class="cp-sub line-clamp-2">{{ headerSubtitle }}</p>
+              <button
+                type="button"
+                class="cp-id"
+                :title="__('Copy ID')"
+                @click="copyToClipboard(leadId)"
+              >
+                {{ leadId }}
+              </button>
+              <ErrorMessage :message="__(uploadError)" />
             </div>
           </div>
         </template>
       </FileUploader>
+      <!-- Quick actions (same row as the contact page) -->
+      <div class="cp-actions px-5 pb-5 pt-4">
+        <button
+          type="button"
+          class="cp-action"
+          :class="{ 'opacity-50': !doc.email }"
+          :title="doc.email ? __('Write an email') : __('No email address')"
+          @click="
+            doc.email
+              ? openEmailBox()
+              : toast.error(__('Please set an email address to send emails'))
+          "
+        >
+          <span class="cp-action-icon"><LucideMail /></span>
+          {{ __('Email') }}
+        </button>
+        <button
+          v-if="callEnabled"
+          type="button"
+          class="cp-action"
+          @click="() => doc.mobile_no ? makeCall(doc.mobile_no) : toast.error(__('Please set a mobile number to make calls'))"
+        >
+          <span class="cp-action-icon"><LucidePhone /></span>
+          {{ __('Call') }}
+        </button>
+        <button type="button" class="cp-action" @click="activities?.showNote()">
+          <span class="cp-action-icon"><LucideSquarePen /></span>
+          {{ __('Note') }}
+        </button>
+        <button type="button" class="cp-action" @click="activities?.showTask()">
+          <span class="cp-action-icon"><LucideClipboardList /></span>
+          {{ __('Task') }}
+        </button>
+        <Dropdown :options="headerMoreActions" placement="left">
+          <button type="button" class="cp-action">
+            <span class="cp-action-icon"><LucideEllipsis /></span>
+            {{ __('More') }}
+          </button>
+        </Dropdown>
+      </div>
       <SLASection
         v-if="doc.sla_status"
         v-model="doc"
@@ -204,6 +163,24 @@
         />
       </div>
     </Resizer>
+    <Tabs
+      v-model="tabIndex"
+      :tabs="tabs"
+      class="flex flex-1 overflow-hidden flex-col [&_[role='tab']]:px-0 [&_[role='tab']]:shrink-0 [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tablist']]:gap-7.5 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
+    >
+      <template #tab-panel>
+        <Activities
+          ref="activities"
+          v-model:reload="reload"
+          v-model:tabIndex="tabIndex"
+          doctype="CRM Lead"
+          :docname="leadId"
+          :tabs="tabs"
+          @beforeSave="beforeStatusChange"
+          @afterSave="reloadResources"
+        />
+      </template>
+    </Tabs>
   </div>
   <ErrorPage
     v-else-if="errorTitle"
@@ -242,13 +219,20 @@
   />
 </template>
 <script setup>
+import '@/components/Kanban/kanban.css'
+import '@/components/ContactProfile/profile.css'
+import KanbanAvatar from '@/components/Kanban/KanbanAvatar.vue'
+import LucideMail from '~icons/lucide/mail'
+import LucidePhone from '~icons/lucide/phone'
+import LucideSquarePen from '~icons/lucide/square-pen'
+import LucideClipboardList from '~icons/lucide/clipboard-list'
+import LucideEllipsis from '~icons/lucide/ellipsis'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Icon from '@/components/Icon.vue'
 import Resizer from '@/components/Resizer.vue'
 import ActivityIcon from '@/components/Icons/ActivityIcon.vue'
 import EmailIcon from '@/components/Icons/EmailIcon.vue'
-import Email2Icon from '@/components/Icons/Email2Icon.vue'
 import CommentIcon from '@/components/Icons/CommentIcon.vue'
 import DetailsIcon from '@/components/Icons/DetailsIcon.vue'
 import PhoneIcon from '@/components/Icons/PhoneIcon.vue'
@@ -257,7 +241,6 @@ import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
 import CameraIcon from '@/components/Icons/CameraIcon.vue'
-import LinkIcon from '@/components/Icons/LinkIcon.vue'
 import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
 import LostReasonModal from '@/components/Modals/LostReasonModal.vue'
 import LayoutHeader from '@/components/LayoutHeader.vue'
@@ -288,7 +271,6 @@ import {
   FileUploader,
   Dropdown,
   Tooltip,
-  Avatar,
   Tabs,
   Breadcrumbs,
   call,
@@ -574,4 +556,42 @@ function reloadResources(data) {
     sections.reload()
   }
 }
+
+// ---- Profile-style header (custom, matches the contact page) ----
+
+const headerSubtitle = computed(() => {
+  const d = doc.value || {}
+  if (d.job_title && d.organization) return __('{0} at {1}', [d.job_title, d.organization])
+  return d.job_title || d.organization || ''
+})
+
+const headerMoreActions = computed(() => [
+  {
+    group: __('Actions'),
+    hideLabel: true,
+    items: [
+      doc.value?.website && {
+        label: __('Go to website'),
+        icon: 'external-link',
+        onClick: () => openWebsite(doc.value.website),
+      },
+      {
+        label: __('Attach a file'),
+        icon: 'paperclip',
+        onClick: () => (showFilesUploader.value = true),
+      },
+      {
+        label: __('Copy ID'),
+        icon: 'copy',
+        onClick: () => copyToClipboard(props.leadId),
+      },
+      canDelete.value && {
+        label: __('Delete'),
+        icon: 'trash-2',
+        theme: 'red',
+        onClick: deleteLead,
+      },
+    ].filter(Boolean),
+  },
+])
 </script>

@@ -220,6 +220,7 @@ def _activity(doc, deal_names):
 		"sender_full_name",
 		"recipients",
 		"communication_date",
+		"content",
 		"reference_doctype",
 		"reference_name",
 	]
@@ -256,6 +257,7 @@ def _activity(doc, deal_names):
 				"title": e.subject,
 				"direction": e.sent_or_received,
 				"from": e.sender_full_name or e.sender,
+				"text": strip_html(e.content or "")[:280],
 				"time": e.communication_date,
 				"ref_doctype": e.reference_doctype,
 				"ref_name": e.reference_name,

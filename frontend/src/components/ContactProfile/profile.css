@@ -461,3 +461,43 @@ a.cp-card:hover {
     padding: 18px 16px 32px;
   }
 }
+
+/* Email composer (CommunicationArea): the page's own buttons open it, so its
+   built-in Reply / Comment bar is hidden; the editor gets a card frame. */
+.cp-composer > div:first-child {
+  display: none;
+}
+.cp-composer > div:not(:first-child):not([style*='display: none']) {
+  overflow: hidden;
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+}
+
+/* ---------- Lead / Deal pages (rp-page): same header + tabs as contacts ---------- */
+
+.cp-id {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--kb-ink-3);
+  font-variant-numeric: tabular-nums;
+  cursor: copy;
+}
+.cp-id:hover {
+  color: var(--kb-ink-2);
+}
+.rp-page .cp-side .cp-actions {
+  border-bottom: 1px solid var(--kb-border);
+}
+.rp-page [role='tablist'] {
+  border-bottom: 1px solid var(--kb-border);
+}
+.rp-page [role='tablist'] [role='tab'] {
+  font-size: 13.5px;
+  color: var(--kb-ink-2);
+}
+.rp-page [role='tablist'] [role='tab'][aria-selected='true'],
+.rp-page [role='tablist'] [role='tab'][data-state='active'] {
+  color: var(--kb-ink);
+  font-weight: 500;
+}

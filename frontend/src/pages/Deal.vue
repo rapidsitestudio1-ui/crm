@@ -36,96 +36,73 @@
       </Dropdown>
     </template>
   </LayoutHeader>
-  <div v-if="doc.name" class="flex h-full overflow-hidden">
-    <Tabs
-      v-model="tabIndex"
-      as="div"
-      :tabs="tabs"
-      class="flex flex-1 overflow-hidden flex-col [&_[role='tab']]:px-0 [&_[role='tab']]:shrink-0 [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tablist']]:gap-7.5 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
-    >
-      <template #tab-panel>
-        <Activities
-          ref="activities"
-          v-model:reload="reload"
-          v-model:tabIndex="tabIndex"
-          doctype="CRM Deal"
-          :docname="dealId"
-          :tabs="tabs"
-          @beforeSave="beforeStatusChange"
-          @afterSave="reloadResources"
-        />
-      </template>
-    </Tabs>
-    <Resizer side="right" class="flex flex-col justify-between border-l">
-      <div
-        class="flex h-[45px] cursor-copy items-center border-b px-5 py-2.5 text-lg-medium text-ink-gray-9"
-        @click="copyToClipboard(dealId)"
-      >
-        {{ __(dealId) }}
-      </div>
-      <div class="flex items-center justify-start gap-5 border-b p-5">
+  <div v-if="doc.name" class="cp-root rp-page flex h-full overflow-hidden">
+    <Resizer class="cp-side flex flex-col justify-between">
+      <div class="flex items-center gap-3.5 px-5 pt-5">
         <Tooltip :text="__('Organization Logo')">
-          <div class="group relative size-12">
-            <Avatar
-              size="3xl"
-              class="size-12"
-              :label="title"
+          <span class="flex">
+            <KanbanAvatar
               :image="organization?.organization_logo"
+              :label="title"
+              size="xl"
+              square
             />
-          </div>
+          </span>
         </Tooltip>
-        <div class="flex flex-col gap-2.5 truncate text-ink-gray-9">
+        <div class="flex min-w-0 flex-col">
           <Tooltip :text="organization?.name || __('Set an Organization')">
-            <div class="truncate text-3xl-medium">
-              {{ title }}
-            </div>
+            <h1 class="cp-name truncate">{{ title }}</h1>
           </Tooltip>
-          <div class="flex gap-1.5">
-            <Button
-              v-if="callEnabled"
-              :tooltip="__('Make a Call')"
-              :icon="PhoneIcon"
-              @click="triggerCall"
-            />
-
-            <Button
-              :tooltip="__('Send an Email')"
-              :icon="Email2Icon"
-              @click="
-                doc.email
-                  ? openEmailBox()
-                  : toast.error(
-                      __('Please set an email address to send emails'),
-                    )
-              "
-            />
-
-            <Button
-              :tooltip="__('Go to Website')"
-              :icon="LinkIcon"
-              @click="
-                doc.website
-                  ? openWebsite(doc.website)
-                  : toast.error(__('Please set a website to visit'))
-              "
-            />
-
-            <Button
-              :tooltip="__('Attach a File')"
-              :icon="AttachmentIcon"
-              @click="showFilesUploader = true"
-            />
-
-            <Button
-              v-if="canDelete"
-              :tooltip="__('Delete')"
-              variant="subtle"
-              icon="lucide-trash-2"
-              theme="red"
-              @click="deleteDeal"
-            />
-          </div>
+          <p v-if="headerSubtitle" class="cp-sub line-clamp-2">{{ headerSubtitle }}</p>
+          <button
+            type="button"
+            class="cp-id"
+            :title="__('Copy ID')"
+            @click="copyToClipboard(dealId)"
+          >
+            {{ dealId }}
+          </button>
         </div>
+      </div>
+      <!-- Quick actions (same row as the contact page) -->
+      <div class="cp-actions px-5 pb-5 pt-4">
+        <button
+          type="button"
+          class="cp-action"
+          :class="{ 'opacity-50': !doc.email }"
+          :title="doc.email ? __('Write an email') : __('No email address')"
+          @click="
+            doc.email
+              ? openEmailBox()
+              : toast.error(__('Please set an email address to send emails'))
+          "
+        >
+          <span class="cp-action-icon"><LucideMail /></span>
+          {{ __('Email') }}
+        </button>
+        <button
+          v-if="callEnabled"
+          type="button"
+          class="cp-action"
+          @click="triggerCall"
+        >
+          <span class="cp-action-icon"><LucidePhone /></span>
+          {{ __('Call') }}
+        </button>
+        <button type="button" class="cp-action" @click="activities?.showNote()">
+          <span class="cp-action-icon"><LucideSquarePen /></span>
+          {{ __('Note') }}
+        </button>
+        <button type="button" class="cp-action" @click="activities?.showTask()">
+          <span class="cp-action-icon"><LucideClipboardList /></span>
+          {{ __('Task') }}
+        </button>
+        <Dropdown :options="headerMoreActions" placement="left">
+          <button type="button" class="cp-action">
+            <span class="cp-action-icon"><LucideEllipsis /></span>
+            {{ __('More') }}
+          </button>
+        </Dropdown>
       </div>
       <SLASection
         v-if="doc.sla_status"
@@ -285,6 +262,25 @@
         </SidePanelLayout>
       </div>
     </Resizer>
+    <Tabs
+      v-model="tabIndex"
+      as="div"
+      :tabs="tabs"
+      class="flex flex-1 overflow-hidden flex-col [&_[role='tab']]:px-0 [&_[role='tab']]:shrink-0 [&_[role='tablist']]:px-5 [&_[role='tablist']::-webkit-scrollbar]:h-0 [&_[role='tablist']]:min-h-[45px] [&_[role='tablist']]:gap-7.5 [&_[role='tabpanel']:not([hidden])]:flex [&_[role='tabpanel']:not([hidden])]:grow"
+    >
+      <template #tab-panel>
+        <Activities
+          ref="activities"
+          v-model:reload="reload"
+          v-model:tabIndex="tabIndex"
+          doctype="CRM Deal"
+          :docname="dealId"
+          :tabs="tabs"
+          @beforeSave="beforeStatusChange"
+          @afterSave="reloadResources"
+        />
+      </template>
+    </Tabs>
   </div>
   <ErrorPage
     v-else-if="errorTitle"
@@ -336,6 +332,14 @@
   />
 </template>
 <script setup>
+import '@/components/Kanban/kanban.css'
+import '@/components/ContactProfile/profile.css'
+import KanbanAvatar from '@/components/Kanban/KanbanAvatar.vue'
+import LucideMail from '~icons/lucide/mail'
+import LucidePhone from '~icons/lucide/phone'
+import LucideSquarePen from '~icons/lucide/square-pen'
+import LucideClipboardList from '~icons/lucide/clipboard-list'
+import LucideEllipsis from '~icons/lucide/ellipsis'
 import DeleteLinkedDocModal from '@/components/DeleteLinkedDocModal.vue'
 import ErrorPage from '@/components/ErrorPage.vue'
 import Icon from '@/components/Icon.vue'
@@ -351,7 +355,6 @@ import TaskIcon from '@/components/Icons/TaskIcon.vue'
 import NoteIcon from '@/components/Icons/NoteIcon.vue'
 import WhatsAppIcon from '@/components/Icons/WhatsAppIcon.vue'
 import IndicatorIcon from '@/components/Icons/IndicatorIcon.vue'
-import LinkIcon from '@/components/Icons/LinkIcon.vue'
 import ArrowUpRightIcon from '@/components/Icons/ArrowUpRightIcon.vue'
 import SuccessIcon from '@/components/Icons/SuccessIcon.vue'
 import AttachmentIcon from '@/components/Icons/AttachmentIcon.vue'
@@ -836,4 +839,56 @@ function reloadResources(data) {
     sections.reload()
   }
 }
+
+// ---- Profile-style header (custom, matches the contact page) ----
+
+const headerSubtitle = computed(() => {
+  const d = doc.value || {}
+  const parts = []
+  if (d.deal_value) {
+    try {
+      parts.push(
+        new Intl.NumberFormat(undefined, {
+          style: 'currency',
+          currency: d.currency || 'USD',
+          maximumFractionDigits: 0,
+        }).format(d.deal_value),
+      )
+    } catch {
+      parts.push(String(d.deal_value))
+    }
+  }
+  if (d.lead_name && d.lead_name !== title.value) parts.push(d.lead_name)
+  return parts.join(' · ')
+})
+
+const headerMoreActions = computed(() => [
+  {
+    group: __('Actions'),
+    hideLabel: true,
+    items: [
+      doc.value?.website && {
+        label: __('Go to website'),
+        icon: 'external-link',
+        onClick: () => openWebsite(doc.value.website),
+      },
+      {
+        label: __('Attach a file'),
+        icon: 'paperclip',
+        onClick: () => (showFilesUploader.value = true),
+      },
+      {
+        label: __('Copy ID'),
+        icon: 'copy',
+        onClick: () => copyToClipboard(props.dealId),
+      },
+      canDelete.value && {
+        label: __('Delete'),
+        icon: 'trash-2',
+        theme: 'red',
+        onClick: deleteDeal,
+      },
+    ].filter(Boolean),
+  },
+])
 </script>

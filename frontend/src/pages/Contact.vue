@@ -80,17 +80,16 @@
             <span class="cp-action-icon"><LucideSquarePen /></span>
             {{ __('Note') }}
           </button>
-          <component
-            :is="primaryEmail ? 'a' : 'button'"
-            :href="primaryEmail ? `mailto:${primaryEmail}` : undefined"
-            :type="primaryEmail ? undefined : 'button'"
+          <button
+            type="button"
             class="cp-action"
             :class="{ 'opacity-50': !primaryEmail }"
-            :title="primaryEmail ? '' : __('No email address')"
+            :title="primaryEmail ? __('Write an email') : __('No email address')"
+            @click="openEmailComposer"
           >
             <span class="cp-action-icon"><LucideMail /></span>
             {{ __('Email') }}
-          </component>
+          </button>
           <button type="button" class="cp-action" @click="addTask">
             <span class="cp-action-icon"><LucideClipboardList /></span>
             {{ __('Task') }}
@@ -402,13 +401,20 @@
         <div v-else-if="tab === 'emails'" class="cp-main max-w-[860px]">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="cp-h !mb-0">{{ __('Emails') }}</h2>
-            <a
-              v-if="primaryEmail"
-              :href="`mailto:${primaryEmail}`"
-              class="cp-btn is-primary"
-            >
+            <button type="button" class="cp-btn is-primary" @click="openEmailComposer">
               <LucideMail /> {{ __('New email') }}
-            </a>
+            </button>
+          </div>
+          <!-- The CRM's own email composer (same as on Leads and Deals):
+               templates, attachments, CC/BCC, signature; sent from the user's
+               email account and linked to this contact. -->
+          <div class="cp-composer mb-6">
+            <CommunicationArea
+              ref="composer"
+              v-model:reload="emailSent"
+              :modelValue="emailDoc"
+              doctype="Contact"
+            />
           </div>
           <p v-if="!emailItems.length" class="cp-empty">
             {{ __('No emails yet. Emails with this contact, or on their deals, show up here.') }}
@@ -472,6 +478,7 @@ import KanbanAvatar from '@/components/Kanban/KanbanAvatar.vue'
 import { getStageTone } from '@/components/Kanban/stageTones'
 import ContactTimeline from '@/components/ContactProfile/ContactTimeline.vue'
 import MeetingDialog from '@/components/ContactProfile/MeetingDialog.vue'
+import CommunicationArea from '@/components/CommunicationArea.vue'
 import { validateIsImageFile, setupCustomizations } from '@/utils'
 import { useContactFields } from '@/composables/useContactFields'
 import { timestampCell } from '@/composables/useTimelinePreferences'
@@ -504,6 +511,7 @@ import {
   computed,
   watch,
   h,
+  nextTick,
   onMounted,
   onBeforeUnmount,
 } from 'vue'
@@ -821,6 +829,29 @@ async function toggleTask(t, done) {
     t.status = prev
     toast.error(__('Could not update the task'))
   }
+}
+
+// ---- Email: the CRM's own composer (CommunicationArea), for this contact ----
+
+const composer = ref(null)
+const emailSent = ref(false)
+// The composer reads the recipient from `email`; Contact keeps it in email_id.
+const emailDoc = computed(() => ({ ...contact.doc, email: primaryEmail.value }))
+watch(emailSent, (sent) => {
+  if (!sent) return
+  emailSent.value = false
+  profile.reload()
+})
+
+async function openEmailComposer() {
+  if (!primaryEmail.value) {
+    toast.error(__('Add an email address to this contact first'))
+    open.fields = true
+    return
+  }
+  tab.value = 'emails'
+  await nextTick()
+  if (composer.value) composer.value.show = true
 }
 
 function toggleSubscribed() {
