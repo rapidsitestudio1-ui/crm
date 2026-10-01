@@ -1,0 +1,407 @@
+/* Pipeline boards (Leads + Deals): shared visual foundation.
+   Light values from the design brief; dark values are our own. */
+
+:root {
+  --kb-bg: #f8f9fb;
+  --kb-card: #ffffff;
+  --kb-ink: #111827;
+  --kb-ink-2: #6b7280;
+  --kb-ink-3: #9ca3af;
+  --kb-border: #e5e7eb;
+  --kb-border-strong: #d1d5db;
+  --kb-accent: #4f46e5;
+  --kb-accent-hover: #4338ca;
+  --kb-accent-soft: #eef2ff;
+  --kb-accent-ring: rgba(79, 70, 229, 0.35);
+  --kb-hover: #f3f4f6;
+  --kb-shadow-hover: 0 1px 2px rgba(17, 24, 39, 0.04), 0 4px 12px rgba(17, 24, 39, 0.06);
+  --kb-shadow-drag: 0 2px 4px rgba(17, 24, 39, 0.06), 0 12px 28px rgba(17, 24, 39, 0.14);
+}
+
+[data-theme='dark'] {
+  --kb-bg: #0f1012;
+  --kb-card: #18191c;
+  --kb-ink: #f3f4f6;
+  --kb-ink-2: #9ca3af;
+  --kb-ink-3: #6b7280;
+  --kb-border: #2a2c31;
+  --kb-border-strong: #3a3d44;
+  --kb-accent: #818cf8;
+  --kb-accent-hover: #a5b4fc;
+  --kb-accent-soft: rgba(129, 140, 248, 0.12);
+  --kb-accent-ring: rgba(129, 140, 248, 0.45);
+  --kb-hover: #232428;
+  --kb-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --kb-shadow-drag: 0 14px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Board ---------- */
+
+.kb-board {
+  background: var(--kb-bg);
+  color: var(--kb-ink);
+}
+
+.kb-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 288px;
+  min-width: 288px;
+  padding: 4px;
+  border-radius: 12px;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.kb-column.is-drop-target {
+  background: var(--kb-accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--kb-accent-ring);
+}
+
+.kb-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 6px 0 10px;
+  border-radius: 8px;
+  background: var(--kb-tone-bg);
+  color: var(--kb-tone-ink);
+}
+[data-theme='dark'] .kb-column-header {
+  background: color-mix(in srgb, var(--kb-tone-dot) 16%, transparent);
+  color: color-mix(in srgb, var(--kb-tone-dot) 55%, white);
+}
+
+.kb-column-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kb-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+[data-theme='dark'] .kb-count {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.kb-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--kb-ink-2);
+  transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease;
+}
+.kb-icon-btn:hover {
+  background: rgba(17, 24, 39, 0.06);
+  color: var(--kb-ink);
+}
+[data-theme='dark'] .kb-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.kb-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--kb-accent-ring);
+}
+
+/* Hidden until the header/card is hovered or focused within (keyboard users
+   still reach it: focus-within reveals it). */
+.kb-reveal {
+  opacity: 0;
+}
+.kb-column-header:hover .kb-reveal,
+.kb-column-header:focus-within .kb-reveal,
+.kb-card:hover .kb-reveal,
+.kb-card:focus-within .kb-reveal,
+.kb-reveal[data-state='open'],
+.kb-reveal:has([data-state='open']) {
+  opacity: 1;
+}
+
+.kb-cards {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 48px;
+  padding: 2px 2px 8px;
+}
+
+/* ---------- Card ---------- */
+
+.kb-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--kb-border);
+  border-radius: 10px;
+  background: var(--kb-card);
+  color: var(--kb-ink);
+  cursor: pointer;
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+.kb-card:hover {
+  border-color: var(--kb-border-strong);
+  box-shadow: var(--kb-shadow-hover);
+  transform: translateY(-1px);
+}
+.kb-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--kb-accent-ring);
+}
+
+.kb-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  color: var(--kb-ink);
+}
+.kb-subtitle {
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--kb-ink-2);
+}
+.kb-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--kb-ink-2);
+}
+.kb-meta svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--kb-ink-3);
+}
+
+.kb-value {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+  letter-spacing: -0.01em;
+  color: var(--kb-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.kb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid var(--kb-border);
+  border-radius: 6px;
+  background: var(--kb-card);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--kb-ink-2);
+  white-space: nowrap;
+}
+.kb-badge.is-danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.kb-badge.is-warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+.kb-badge.is-success {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+[data-theme='dark'] .kb-badge.is-danger { border-color: #7f1d1d; background: rgba(220, 38, 38, 0.12); color: #fca5a5; }
+[data-theme='dark'] .kb-badge.is-warning { border-color: #78350f; background: rgba(217, 119, 6, 0.12); color: #fcd34d; }
+[data-theme='dark'] .kb-badge.is-success { border-color: #065f46; background: rgba(5, 150, 105, 0.12); color: #6ee7b7; }
+
+/* Configured extra fields: compact label/value list. */
+.kb-props {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 6px;
+  font-size: 12.5px;
+  line-height: 18px;
+}
+.kb-prop-label {
+  color: var(--kb-ink-3);
+  white-space: nowrap;
+}
+.kb-prop-value {
+  min-width: 0;
+  color: var(--kb-ink);
+  text-align: right;
+  justify-self: end;
+  max-width: 100%;
+}
+.kb-prop-value > * {
+  justify-content: flex-end;
+}
+
+.kb-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--kb-border);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--kb-ink-3);
+}
+.kb-counts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.kb-counts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.kb-counts svg {
+  width: 13px;
+  height: 13px;
+}
+
+.kb-avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+}
+
+/* ---------- Drag and drop ---------- */
+
+/* Placeholder left in the list where the card will land. */
+.kb-ghost {
+  border: 1.5px dashed var(--kb-accent) !important;
+  background: var(--kb-accent-soft) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.kb-ghost > * {
+  visibility: hidden;
+}
+
+/* The card following the pointer (SortableJS fallback clone). */
+.kb-drag {
+  border-color: var(--kb-border-strong) !important;
+  box-shadow: var(--kb-shadow-drag) !important;
+  transform: rotate(1.5deg) scale(1.02) !important;
+  opacity: 1 !important;
+  cursor: grabbing !important;
+}
+
+.kb-board.is-dragging .kb-card:not(.kb-ghost):hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.kb-load-more {
+  height: 30px;
+  border: 1px solid var(--kb-border);
+  border-radius: 8px;
+  background: var(--kb-card);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--kb-ink-2);
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.kb-load-more:hover {
+  border-color: var(--kb-border-strong);
+  color: var(--kb-ink);
+}
+
+/* ---------- Pipeline surface: Leads + Deals pages ---------- */
+/* Set on <html data-surface="pipeline"> by those pages while mounted. */
+
+[data-surface='pipeline'] .crm-toolbar {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--kb-border);
+  background: var(--kb-card);
+}
+
+/* Quick-filter inputs: compact, white, quiet borders, indigo focus. */
+[data-surface='pipeline'] .crm-toolbar :is(input, select, button[class*='form-input'], .form-control button) {
+  height: 30px;
+  font-size: 13px;
+}
+[data-surface='pipeline'] .crm-toolbar :is(input[type='text'], select) {
+  border: 1px solid var(--kb-border);
+  border-radius: 7px;
+  background: var(--kb-card);
+  color: var(--kb-ink);
+}
+[data-surface='pipeline'] .crm-toolbar :is(input[type='text'], select):hover {
+  border-color: var(--kb-border-strong);
+}
+[data-surface='pipeline'] .crm-toolbar :is(input, select):focus {
+  border-color: var(--kb-accent);
+  box-shadow: 0 0 0 3px var(--kb-accent-soft);
+  outline: none;
+}
+
+/* Secondary toolbar buttons: white, bordered, same 30px height. */
+[data-surface='pipeline'] .crm-toolbar-actions button {
+  height: 30px;
+  border: 1px solid var(--kb-border);
+  border-radius: 7px;
+  background: var(--kb-card);
+  color: var(--kb-ink);
+  box-shadow: 0 1px 1px rgba(17, 24, 39, 0.03);
+}
+[data-surface='pipeline'] .crm-toolbar-actions button:hover {
+  border-color: var(--kb-border-strong);
+  background: var(--kb-hover);
+}
+
+/* Primary action (Create): indigo. */
+[data-surface='pipeline'] .crm-primary {
+  background: var(--kb-accent) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+[data-surface='pipeline'] .crm-primary:hover {
+  background: var(--kb-accent-hover) !important;
+}
+[data-surface='pipeline'] .crm-primary:focus-visible {
+  box-shadow: 0 0 0 3px var(--kb-accent-ring) !important;
+}
+
+/* View switcher: active segment picks up the indigo accent. */
+[data-surface='pipeline'] [role='tablist'] [role='tab'][aria-selected='true'] {
+  color: var(--kb-accent);
+}
+[data-surface='pipeline'] [role='tablist'] [role='tab'][aria-selected='true'] svg {
+  color: var(--kb-accent);
+}

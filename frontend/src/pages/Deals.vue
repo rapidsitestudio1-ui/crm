@@ -9,6 +9,7 @@
         :actions="dealsListView.customListActions"
       />
       <Button
+        class="crm-primary"
         variant="solid"
         :label="__('Create')"
         iconLeft="plus"
@@ -37,75 +38,68 @@
         query: { view: route.query.view, viewType: route.params.viewType },
       }),
       onNewClick: (column) => onNewClick(column),
+      doctype: 'CRM Deal',
+      getStatus: (name) => getDealStatus(name),
+      cardFields: dealCardFields,
     }"
     @update="(data) => viewControls.updateKanbanSettings(data)"
     @loadMore="(columnName) => viewControls.loadMoreKanban(columnName)"
   >
-    <template #title="{ titleField, itemName }">
-      <div class="flex gap-2 items-center">
-        <div v-if="titleField === 'status'">
-          <IndicatorIcon :class="getRow(itemName, titleField).color" />
+    <template #card-header="{ itemName, column, titleField }">
+      <KanbanCardHeader
+        :title="cardTitle(itemName, titleField)"
+        :subtitle="cardSubtitle(itemName)"
+        :image="getRow(itemName, 'organization').logo"
+        square
+        :email="column.fields?.includes('email') ? getRow(itemName, 'email').label : ''"
+        :phone="
+          column.fields?.includes('mobile_no')
+            ? getRow(itemName, 'mobile_no').label
+            : ''
+        "
+      >
+        <template #actions>
+          <Dropdown :options="actions(itemName)" placement="right">
+            <button type="button" class="kb-icon-btn" :aria-label="__('Quick actions')">
+              <LucidePlus class="size-4" />
+            </button>
+          </Dropdown>
+        </template>
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <span v-if="dealValue(itemName)" class="kb-value truncate">
+              {{ dealValue(itemName) }}
+            </span>
+            <span v-else class="kb-subtitle">{{ __('No value') }}</span>
+            <span
+              v-if="dealExtras[itemName]?.probability"
+              class="kb-badge"
+              :title="__('Probability')"
+            >
+              {{ Math.round(dealExtras[itemName].probability) }}%
+            </span>
+          </div>
+          <div v-if="closeInfo(itemName)" class="kb-meta">
+            <LucideCalendar />
+            <span
+              class="truncate"
+              :class="{ 'text-[#B91C1C]': closeInfo(itemName).overdue }"
+            >
+              {{ closeInfo(itemName).label }}
+            </span>
+          </div>
         </div>
-        <div
-          v-else-if="
-            titleField === 'organization' && getRow(itemName, titleField).label
-          "
-        >
-          <Avatar
-            class="flex items-center"
-            :image="getRow(itemName, titleField).logo"
-            :label="getRow(itemName, titleField).label"
-            size="sm"
-          />
-        </div>
-        <div
-          v-else-if="
-            titleField === 'deal_owner' &&
-            getRow(itemName, titleField).full_name
-          "
-        >
-          <Avatar
-            class="flex items-center"
-            :image="getRow(itemName, titleField).user_image"
-            :label="getRow(itemName, titleField).full_name"
-            size="sm"
-          />
-        </div>
-        <div
-          v-if="
-            [
-              'modified',
-              'creation',
-              'first_response_time',
-              'first_responded_on',
-              'response_by',
-            ].includes(titleField)
-          "
-          class="truncate text-base"
-        >
-          <Tooltip :text="getRow(itemName, titleField).label">
-            <div>{{ getRow(itemName, titleField).timeAgo }}</div>
-          </Tooltip>
-        </div>
-        <div v-else-if="titleField === 'sla_status'" class="truncate text-base">
-          <Badge
-            v-if="getRow(itemName, titleField).value"
-            :variant="'subtle'"
-            :theme="getRow(itemName, titleField).color"
-            size="md"
-            :label="getRow(itemName, titleField).value"
-          />
-        </div>
-        <div
-          v-else-if="getRow(itemName, titleField).label"
-          class="truncate text-base"
-        >
-          {{ getRow(itemName, titleField).label }}
-        </div>
-        <div v-else class="text-ink-gray-4">{{ __('No Title') }}</div>
-      </div>
+        <template v-if="slaBadge(itemName)" #badges>
+          <span
+            class="kb-badge"
+            :class="slaBadge(itemName).cls"
+            :title="slaBadge(itemName).title"
+          >
+            {{ slaBadge(itemName).label }}
+          </span>
+        </template>
+      </KanbanCardHeader>
     </template>
-
     <template #fields="{ fieldName, itemName }">
       <div
         v-if="getRow(itemName, fieldName).label"
@@ -172,38 +166,27 @@
       </div>
     </template>
 
-    <template #actions="{ itemName }">
-      <div class="flex gap-2 items-center justify-between">
-        <div class="text-ink-gray-5 flex items-center gap-1.5">
-          <EmailAtIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_email_count').label">
-            {{ getRow(itemName, '_email_count').label }}
-          </span>
-          <span class="text-4xl leading-[0]"> &middot; </span>
-          <NoteIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_note_count').label">
-            {{ getRow(itemName, '_note_count').label }}
-          </span>
-          <span class="text-4xl leading-[0]"> &middot; </span>
-          <TaskIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_task_count').label">
-            {{ getRow(itemName, '_task_count').label }}
-          </span>
-          <span class="text-4xl leading-[0]"> &middot; </span>
-          <CommentIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_comment_count').label">
-            {{ getRow(itemName, '_comment_count').label }}
-          </span>
-        </div>
-        <Dropdown
-          class="flex items-center gap-2"
-          :options="actions(itemName)"
-          variant="ghost"
-          @click.stop.prevent
-        >
-          <Button icon="lucide-plus" variant="ghost" />
-        </Dropdown>
-      </div>
+    <template #card-footer="{ itemName, column }">
+      <KanbanCardFooter
+        :counts="{
+          email: getRow(itemName, '_email_count').label,
+          note: getRow(itemName, '_note_count').label,
+          task: getRow(itemName, '_task_count').label,
+          comment: getRow(itemName, '_comment_count').label,
+        }"
+        :assignees="
+          column.fields?.includes('_assign')
+            ? getRow(itemName, '_assign').label || []
+            : []
+        "
+        :owner="cardOwner(itemName)"
+        :time="
+          column.fields?.includes('modified')
+            ? getRow(itemName, 'modified').timeAgo
+            : ''
+        "
+        :timeTitle="getRow(itemName, 'modified').label"
+      />
     </template>
   </KanbanView>
   <DealsListView
@@ -256,6 +239,11 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 import DealsListView from '@/components/ListViews/DealsListView.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import KanbanView from '@/components/Kanban/KanbanView.vue'
+import KanbanCardHeader from '@/components/Kanban/KanbanCardHeader.vue'
+import KanbanCardFooter from '@/components/Kanban/KanbanCardFooter.vue'
+import { useKanbanExtras } from '@/composables/useKanbanExtras'
+import LucidePlus from '~icons/lucide/plus'
+import LucideCalendar from '~icons/lucide/calendar'
 import DealModal from '@/components/Modals/DealModal.vue'
 import ViewControls from '@/components/ViewControls.vue'
 import { useDoctypeModal } from '@/composables/doctypeModal'
@@ -270,7 +258,7 @@ import { timestampCell } from '@/composables/useTimelinePreferences'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
 import { Tooltip, Avatar, Dropdown } from 'frappe-ui'
 import { useRoute } from 'vue-router'
-import { ref, reactive, computed, h } from 'vue'
+import { ref, reactive, computed, h, onMounted, onBeforeUnmount } from 'vue'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Deal')
@@ -559,4 +547,101 @@ function after(d, isNew = false) {
     capture(a + '_updated')
   }
 }
+
+// ---- Kanban card presentation (custom) ----
+
+// Fields the card header/footer already shows; anything else picked in Kanban
+// settings is listed on the card as label / value.
+const dealCardFields = [
+  'organization',
+  'email',
+  'mobile_no',
+  '_assign',
+  'modified',
+  'status',
+  'deal_owner',
+  'sla_status',
+  'deal_value',
+  'probability',
+  'expected_closure_date',
+  'lead_name',
+]
+
+// The board query doesn't return these; read them for the cards on screen.
+const dealExtras = useKanbanExtras(
+  'CRM Deal',
+  () =>
+    deals.value?.data?.view_type === 'kanban'
+      ? deals.value.data.data.flatMap((c) => (c.data || []).map((d) => d.name))
+      : null,
+  [
+    'deal_value',
+    'expected_deal_value',
+    'probability',
+    'expected_closure_date',
+    'closed_date',
+    'lead_name',
+    'currency',
+  ],
+)
+
+function labelOf(v) {
+  if (v == null) return ''
+  if (typeof v === 'object') return v.label || v.timeAgo || ''
+  return String(v)
+}
+
+function cardTitle(itemName, titleField) {
+  const org = getRow(itemName, 'organization').label
+  if (!titleField || titleField === 'organization') {
+    return org || dealExtras[itemName]?.lead_name || itemName
+  }
+  return labelOf(getRow(itemName, titleField)) || org || itemName
+}
+
+function cardSubtitle(itemName) {
+  return dealExtras[itemName]?.lead_name || ''
+}
+
+function dealValue(itemName) {
+  const d = dealExtras[itemName]
+  if (!d) return ''
+  const field = d.deal_value ? 'deal_value' : d.expected_deal_value ? 'expected_deal_value' : null
+  if (!field) return ''
+  // CRM currency formatting, without trailing zero decimals.
+  return getFormattedCurrency(field, d).replace(/[.,]00(?=\D*$)/, '')
+}
+
+function closeInfo(itemName) {
+  const d = dealExtras[itemName]
+  const status = getRow(itemName, 'status').label
+  const type = getDealStatus(status)?.type
+  if (type === 'Won' && d?.closed_date) {
+    return { label: __('Won {0}', [formatDate(d.closed_date, 'MMM D')]), overdue: false }
+  }
+  if (!d?.expected_closure_date || ['Won', 'Lost'].includes(type)) return null
+  const overdue = new Date(d.expected_closure_date) < new Date(new Date().toDateString())
+  return {
+    label: overdue
+      ? __('Close date passed · {0}', [formatDate(d.expected_closure_date, 'MMM D')])
+      : __('Closes {0}', [formatDate(d.expected_closure_date, 'MMM D')]),
+    overdue,
+  }
+}
+
+function cardOwner(itemName) {
+  const o = getRow(itemName, 'deal_owner')
+  return o?.label ? { label: o.label, image: o.user_image } : null
+}
+
+function slaBadge(itemName) {
+  const s = getRow(itemName, 'sla_status')
+  if (!s?.value) return null
+  const cls = { red: 'is-danger', green: 'is-success', orange: 'is-warning' }[s.color] || ''
+  return { label: s.value, title: s.label, cls }
+}
+
+// Indigo accents for this page's toolbar and primary action (see kanban.css).
+onMounted(() => (document.documentElement.dataset.surface = 'pipeline'))
+onBeforeUnmount(() => delete document.documentElement.dataset.surface)
 </script>

@@ -142,7 +142,10 @@
       <Button icon="lucide-x" @click="customizeQuickFilter = false" />
     </div>
   </div>
-  <div v-else class="flex items-center justify-between gap-2 px-5 py-4">
+  <div
+    v-else
+    class="crm-toolbar flex items-center justify-between gap-2 px-5 py-4"
+  >
     <FadedScrollableDiv
       class="flex flex-1 items-center overflow-x-auto -ml-1 h-9"
       orientation="horizontal"
@@ -167,7 +170,7 @@
         <Button :label="__('Cancel')" @click="cancelChanges" />
         <Button :label="__('Save Changes')" @click="saveView" />
       </div>
-      <div class="flex items-center gap-2">
+      <div class="crm-toolbar-actions flex items-center gap-2">
         <Button
           :tooltip="__('Refresh')"
           icon="lucide-refresh-ccw"

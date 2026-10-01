@@ -9,6 +9,7 @@
         :actions="leadsListView.customListActions"
       />
       <Button
+        class="crm-primary"
         variant="solid"
         :label="__('Create')"
         iconLeft="plus"
@@ -38,88 +39,44 @@
         query: { view: route.query.view, viewType: route.params.viewType },
       }),
       onNewClick: (column) => onNewClick(column),
+      doctype: 'CRM Lead',
+      getStatus: (name) => getLeadStatus(name),
+      cardFields: leadCardFields,
     }"
     @update="(data) => viewControls.updateKanbanSettings(data)"
     @loadMore="(columnName) => viewControls.loadMoreKanban(columnName)"
   >
-    <template #title="{ titleField, itemName }">
-      <div class="flex items-center gap-2">
-        <div v-if="titleField === 'status'">
-          <IndicatorIcon :class="getRow(itemName, titleField).color" />
-        </div>
-        <div
-          v-else-if="
-            titleField === 'organization' && getRow(itemName, titleField).label
-          "
-        >
-          <Avatar
-            class="flex items-center"
-            :image="getRow(itemName, titleField).logo"
-            :label="getRow(itemName, titleField).label"
-            size="sm"
-          />
-        </div>
-        <div
-          v-else-if="
-            titleField === 'lead_name' && getRow(itemName, titleField).label
-          "
-        >
-          <Avatar
-            class="flex items-center"
-            :image="getRow(itemName, titleField).image"
-            :label="getRow(itemName, titleField).image_label"
-            size="sm"
-          />
-        </div>
-        <div
-          v-else-if="
-            titleField === 'lead_owner' &&
-            getRow(itemName, titleField).full_name
-          "
-        >
-          <Avatar
-            class="flex items-center"
-            :image="getRow(itemName, titleField).user_image"
-            :label="getRow(itemName, titleField).full_name"
-            size="sm"
-          />
-        </div>
-        <div v-else-if="titleField === 'mobile_no'">
-          <PhoneIcon class="h-4 w-4" />
-        </div>
-        <div
-          v-if="
-            [
-              'modified',
-              'creation',
-              'first_response_time',
-              'first_responded_on',
-              'response_by',
-            ].includes(titleField)
-          "
-          class="truncate text-base"
-        >
-          <Tooltip :text="getRow(itemName, titleField).label">
-            <div>{{ getRow(itemName, titleField).timeAgo }}</div>
-          </Tooltip>
-        </div>
-        <div v-else-if="titleField === 'sla_status'" class="truncate text-base">
-          <Badge
-            v-if="getRow(itemName, titleField).value"
-            :variant="'subtle'"
-            :theme="getRow(itemName, titleField).color"
-            size="md"
-            :label="getRow(itemName, titleField).value"
-          />
-        </div>
-        <div
-          v-else-if="getRow(itemName, titleField).label"
-          class="truncate text-base"
-        >
-          {{ getRow(itemName, titleField).label }}
-        </div>
-        <div v-else class="text-ink-gray-4">{{ __('No Title') }}</div>
-      </div>
+    <template #card-header="{ itemName, column, titleField }">
+      <KanbanCardHeader
+        :title="cardTitle(itemName, titleField)"
+        :subtitle="cardSubtitle(itemName, titleField)"
+        :image="getRow(itemName, 'lead_name').image"
+        :email="column.fields?.includes('email') ? getRow(itemName, 'email').label : ''"
+        :phone="
+          column.fields?.includes('mobile_no')
+            ? getRow(itemName, 'mobile_no').label
+            : ''
+        "
+      >
+        <template #actions>
+          <Dropdown :options="actions(itemName)" placement="right">
+            <button type="button" class="kb-icon-btn" :aria-label="__('Quick actions')">
+              <LucidePlus class="size-4" />
+            </button>
+          </Dropdown>
+        </template>
+        <template v-if="leadBadges(itemName).length" #badges>
+          <span
+            v-for="b in leadBadges(itemName)"
+            :key="b.key"
+            class="kb-badge"
+            :class="b.cls"
+            :title="b.title"
+          >
+            {{ b.label }}
+          </span>
+        </template>
+      </KanbanCardHeader>
     </template>
     <template #fields="{ fieldName, itemName }">
       <div
@@ -198,38 +155,27 @@
         </div>
       </div>
     </template>
-    <template #actions="{ itemName }">
-      <div class="flex gap-2 items-center justify-between">
-        <div class="text-ink-gray-5 flex items-center gap-1.5">
-          <EmailAtIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_email_count').label">
-            {{ getRow(itemName, '_email_count').label }}
-          </span>
-          <span class="text-4xl leading-[0]"> &middot; </span>
-          <NoteIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_note_count').label">
-            {{ getRow(itemName, '_note_count').label }}
-          </span>
-          <span class="text-4xl leading-[0]"> &middot; </span>
-          <TaskIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_task_count').label">
-            {{ getRow(itemName, '_task_count').label }}
-          </span>
-          <span class="text-4xl leading-[0]"> &middot; </span>
-          <CommentIcon class="h-4 w-4" />
-          <span v-if="getRow(itemName, '_comment_count').label">
-            {{ getRow(itemName, '_comment_count').label }}
-          </span>
-        </div>
-        <Dropdown
-          class="flex items-center gap-2"
-          :options="actions(itemName)"
-          variant="ghost"
-          @click.stop.prevent
-        >
-          <Button icon="lucide-plus" variant="ghost" />
-        </Dropdown>
-      </div>
+    <template #card-footer="{ itemName, column }">
+      <KanbanCardFooter
+        :counts="{
+          email: getRow(itemName, '_email_count').label,
+          note: getRow(itemName, '_note_count').label,
+          task: getRow(itemName, '_task_count').label,
+          comment: getRow(itemName, '_comment_count').label,
+        }"
+        :assignees="
+          column.fields?.includes('_assign')
+            ? getRow(itemName, '_assign').label || []
+            : []
+        "
+        :owner="cardOwner(itemName)"
+        :time="
+          column.fields?.includes('modified')
+            ? getRow(itemName, 'modified').timeAgo
+            : ''
+        "
+        :timeTitle="getRow(itemName, 'modified').label"
+      />
     </template>
   </KanbanView>
   <LeadsListView
@@ -282,6 +228,11 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 import LeadsListView from '@/components/ListViews/LeadsListView.vue'
 import EmptyState from '@/components/ListViews/EmptyState.vue'
 import KanbanView from '@/components/Kanban/KanbanView.vue'
+import KanbanCardHeader from '@/components/Kanban/KanbanCardHeader.vue'
+import KanbanCardFooter from '@/components/Kanban/KanbanCardFooter.vue'
+import { useKanbanExtras } from '@/composables/useKanbanExtras'
+import LucidePlus from '~icons/lucide/plus'
+import LucideCalendar from '~icons/lucide/calendar'
 import LeadModal from '@/components/Modals/LeadModal.vue'
 import ViewControls from '@/components/ViewControls.vue'
 import { useDoctypeModal } from '@/composables/doctypeModal'
@@ -296,7 +247,7 @@ import { timestampCell } from '@/composables/useTimelinePreferences'
 import { useOnboarding, useTelemetry } from 'frappe-ui/frappe'
 import { Avatar, Tooltip, Dropdown } from 'frappe-ui'
 import { useRoute } from 'vue-router'
-import { ref, computed, reactive, h } from 'vue'
+import { ref, computed, reactive, h, onMounted, onBeforeUnmount } from 'vue'
 
 const { getFormattedPercent, getFormattedFloat, getFormattedCurrency } =
   getMeta('CRM Lead')
@@ -593,4 +544,75 @@ function after(d, isNew = false) {
     capture(a + '_updated')
   }
 }
+
+// ---- Kanban card presentation (custom) ----
+
+// Fields the card header/footer already shows; anything else picked in Kanban
+// settings is listed on the card as label / value.
+const leadCardFields = [
+  'lead_name',
+  'organization',
+  'email',
+  'mobile_no',
+  '_assign',
+  'modified',
+  'status',
+  'lead_owner',
+  'sla_status',
+]
+
+const leadExtras = useKanbanExtras(
+  'CRM Lead',
+  () =>
+    leads.value?.data?.view_type === 'kanban'
+      ? leads.value.data.data.flatMap((c) => (c.data || []).map((d) => d.name))
+      : null,
+  ['source'],
+)
+
+function labelOf(v) {
+  if (v == null) return ''
+  if (typeof v === 'object') return v.label || v.timeAgo || ''
+  return String(v)
+}
+
+function cardTitle(itemName, titleField) {
+  if (!titleField || titleField === 'lead_name') {
+    return getRow(itemName, 'lead_name').label || itemName
+  }
+  return labelOf(getRow(itemName, titleField)) || getRow(itemName, 'lead_name').label
+}
+
+function cardSubtitle(itemName, titleField) {
+  const org = getRow(itemName, 'organization').label
+  if (titleField && !['lead_name', 'organization'].includes(titleField)) {
+    return getRow(itemName, 'lead_name').label || org
+  }
+  return titleField === 'organization' ? getRow(itemName, 'lead_name').label : org
+}
+
+function cardOwner(itemName) {
+  const o = getRow(itemName, 'lead_owner')
+  return o?.label ? { label: o.label, image: o.user_image } : null
+}
+
+function slaBadge(itemName) {
+  const s = getRow(itemName, 'sla_status')
+  if (!s?.value) return null
+  const cls = { red: 'is-danger', green: 'is-success', orange: 'is-warning' }[s.color] || ''
+  return { key: 'sla', label: s.value, title: s.label, cls }
+}
+
+function leadBadges(itemName) {
+  const badges = []
+  const source = leadExtras[itemName]?.source
+  if (source) badges.push({ key: 'source', label: __(source), title: __('Source') })
+  const sla = slaBadge(itemName)
+  if (sla) badges.push(sla)
+  return badges
+}
+
+// Indigo accents for this page's toolbar and primary action (see kanban.css).
+onMounted(() => (document.documentElement.dataset.surface = 'pipeline'))
+onBeforeUnmount(() => delete document.documentElement.dataset.surface)
 </script>
