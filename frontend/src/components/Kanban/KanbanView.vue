@@ -109,10 +109,16 @@
               @end="onDragEnd"
             >
               <template #item="{ element: fields }">
+                <!-- draggable=false + dragstart.prevent: cards are links, and a
+                     browser's native link/image drag would cancel the pointer
+                     events SortableJS's fallback drag relies on, freezing the
+                     card mid-drag. -->
                 <component
                   :is="options.getRoute ? 'router-link' : 'div'"
                   class="kb-card"
+                  draggable="false"
                   :data-name="fields.name"
+                  @dragstart.prevent
                   v-bind="{
                     to: options.getRoute ? options.getRoute(fields) : undefined,
                     onClick: options.onClick

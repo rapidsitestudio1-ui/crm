@@ -155,12 +155,14 @@
   background: var(--kb-card);
   color: var(--kb-ink);
   cursor: pointer;
-  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+  /* `translate`, not `transform`: SortableJS moves cards with `transform`
+     while dragging, and the two must not override each other. */
+  transition: box-shadow 160ms ease, border-color 160ms ease, translate 160ms ease;
 }
 .kb-card:hover {
   border-color: var(--kb-border-strong);
   box-shadow: var(--kb-shadow-hover);
-  transform: translateY(-1px);
+  translate: 0 -1px;
 }
 .kb-card:focus-visible {
   outline: none;
@@ -307,23 +309,29 @@
   border: 1.5px dashed var(--kb-accent) !important;
   background: var(--kb-accent-soft) !important;
   box-shadow: none !important;
-  transform: none !important;
+  translate: none !important;
 }
 .kb-ghost > * {
   visibility: hidden;
 }
 
-/* The card following the pointer (SortableJS fallback clone). */
+/* The card following the pointer (SortableJS fallback clone). SortableJS
+   positions it with an inline `transform`, so the lift uses the separate
+   `rotate`/`scale` properties, which compose with it instead of replacing it,
+   and no transition, so it tracks the pointer without lag. */
 .kb-drag {
   border-color: var(--kb-border-strong) !important;
   box-shadow: var(--kb-shadow-drag) !important;
-  transform: rotate(1.5deg) scale(1.02) !important;
+  rotate: 1.5deg;
+  scale: 1.02;
+  translate: none !important;
+  transition: none !important;
   opacity: 1 !important;
   cursor: grabbing !important;
 }
 
 .kb-board.is-dragging .kb-card:not(.kb-ghost):hover {
-  transform: none;
+  translate: none;
   box-shadow: none;
 }
 
