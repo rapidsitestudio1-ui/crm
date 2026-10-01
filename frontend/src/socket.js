@@ -11,7 +11,9 @@ export function initSocket() {
 
   let socket = io(url, {
     withCredentials: true,
-    reconnectionAttempts: 5,
+    // Keep retrying: the dev container restarts often and a socket that gives
+    // up stays dead until a page reload, silently stopping live updates.
+    reconnectionAttempts: Infinity,
   })
   socket.on('refetch_resource', (data) => {
     if (data.cache_key) {

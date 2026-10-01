@@ -307,6 +307,21 @@ def _activity(user):
 		{"user": user},
 		as_dict=True,
 	)
+	comments = frappe.db.sql(
+		f"""SELECT reference_doctype, reference_name, creation FROM `tabComment`
+		WHERE comment_type = 'Comment' AND reference_doctype IN ('CRM Lead', 'CRM Deal')
+		{owner_cond} ORDER BY creation DESC LIMIT {limit}""",
+		{"user": user},
+		as_dict=True,
+	)
+	call_cond = "AND (caller = %(user)s OR receiver = %(user)s)" if user else ""
+	calls = frappe.db.sql(
+		f"""SELECT reference_doctype, reference_docname, type, status, creation FROM `tabCRM Call Log`
+		WHERE reference_doctype IN ('CRM Lead', 'CRM Deal') {call_cond}
+		ORDER BY creation DESC LIMIT {limit}""",
+		{"user": user},
+		as_dict=True,
+	)
 	whatsapp = []
 	if frappe.db.exists("DocType", "WhatsApp Message"):
 		whatsapp = frappe.db.sql(
@@ -320,6 +335,8 @@ def _activity(user):
 		[(n.reference_doctype, n.reference_docname) for n in notes]
 		+ [(e.reference_doctype, e.reference_name) for e in emails]
 		+ [(w.reference_doctype, w.reference_name) for w in whatsapp]
+		+ [(c.reference_doctype, c.reference_name) for c in comments]
+		+ [(c.reference_doctype, c.reference_docname) for c in calls]
 	)
 
 	def title_of(dt, name):
@@ -349,6 +366,32 @@ def _activity(user):
 				"time": e.t,
 				"doctype": e.reference_doctype,
 				"name": e.reference_name,
+			}
+		)
+	for c in comments:
+		events.append(
+			{
+				"type": "comment",
+				"title": "Comment added",
+				"subtitle": title_of(c.reference_doctype, c.reference_name),
+				"time": c.creation,
+				"doctype": c.reference_doctype,
+				"name": c.reference_name,
+			}
+		)
+	for c in calls:
+		if c.status in ("No Answer", "Busy", "Failed", "Canceled"):
+			title = "Missed call" if c.type == "Incoming" else "Call not answered"
+		else:
+			title = "Incoming call" if c.type == "Incoming" else "Outgoing call"
+		events.append(
+			{
+				"type": "call",
+				"title": title,
+				"subtitle": title_of(c.reference_doctype, c.reference_docname),
+				"time": c.creation,
+				"doctype": c.reference_doctype,
+				"name": c.reference_docname,
 			}
 		)
 	for w in whatsapp:

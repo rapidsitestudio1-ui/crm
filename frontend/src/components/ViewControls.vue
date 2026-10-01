@@ -348,7 +348,15 @@ import {
   FeatherIcon,
   usePageMeta,
 } from 'frappe-ui'
-import { computed, ref, watch, h, markRaw } from 'vue'
+import {
+  computed,
+  ref,
+  watch,
+  h,
+  markRaw,
+  onMounted,
+  onBeforeUnmount,
+} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { isMobileView } from '@/composables/settings'
 import Draggable from 'vuedraggable'
@@ -369,7 +377,7 @@ const props = defineProps({
 })
 
 const { brand } = getSettings()
-const { $dialog } = globalStore()
+const { $dialog, $socket } = globalStore()
 const { reload: reloadView, getDefaultView, getView } = viewsStore()
 
 const { isManager, getUser } = usersStore()
@@ -556,6 +564,34 @@ listResource = createResource({
       page_length_count: params.page_length_count,
     }
   },
+})
+
+// Live updates (custom): the Leads and Deals list/kanban reload when any
+// record of their doctype is created, changed or deleted, by anyone. Frappe
+// emits "list_update" to sockets subscribed to the doctype; debounced so a
+// burst of changes (e.g. a bulk edit) causes one reload.
+const LIVE_DOCTYPES = ['CRM Lead', 'CRM Deal']
+let liveTimer
+function onListUpdate(data) {
+  if (data?.doctype !== props.doctype) return
+  clearTimeout(liveTimer)
+  liveTimer = setTimeout(() => listResource.reload(), 600)
+}
+// Rooms are dropped when the socket reconnects, so subscribe on every connect.
+function onReconnect() {
+  $socket.emit('doctype_subscribe', props.doctype)
+  listResource.reload()
+}
+onMounted(() => {
+  if (!LIVE_DOCTYPES.includes(props.doctype)) return
+  $socket.emit('doctype_subscribe', props.doctype)
+  $socket.on('connect', onReconnect)
+  $socket.on('list_update', onListUpdate)
+})
+onBeforeUnmount(() => {
+  clearTimeout(liveTimer)
+  $socket.off('connect', onReconnect)
+  $socket.off('list_update', onListUpdate)
 })
 
 list.value = listResource

@@ -1,14 +1,14 @@
 <template>
-  <div class="ov-root min-h-full px-5 pb-6 pt-5">
-    <div v-if="!data" class="grid grid-cols-4 gap-[14px]">
+  <div class="ov-root min-h-full px-6 pb-8 pt-6">
+    <div v-if="!data" class="grid grid-cols-4 gap-5">
       <div v-for="i in 4" :key="i" class="ov-card h-[122px] animate-pulse" />
     </div>
-    <div v-else class="flex flex-col gap-[13px]">
-      <div class="grid grid-cols-1 gap-[14px] sm:grid-cols-2 xl:grid-cols-4">
+    <div v-else class="flex flex-col gap-6">
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard v-for="m in metrics" :key="m.title" v-bind="m" :days="data.days" />
       </div>
 
-      <div class="grid grid-cols-1 gap-[14px] lg:grid-cols-[minmax(0,768fr)_minmax(0,531fr)]">
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,768fr)_minmax(0,531fr)]">
         <SalesTrendCard v-model:days="days" :data="data.trend" />
         <PipelineForecastCard
           v-model:months="forecastMonths"
@@ -18,7 +18,7 @@
       </div>
 
       <div
-        class="grid grid-cols-1 gap-[14px] lg:grid-cols-2 xl:grid-cols-[minmax(0,459fr)_minmax(0,419fr)_minmax(0,407fr)]"
+        class="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-[minmax(0,459fr)_minmax(0,419fr)_minmax(0,407fr)]"
       >
         <FunnelCard :data="data.funnel" />
         <TasksCard :tasks="data.tasks" />
@@ -70,7 +70,15 @@ watch([days, forecastMonths, () => props.user], () => overview.reload())
 // whenever a record of it is created, changed or deleted. Any change to a
 // doctype the dashboard reads refreshes it (debounced, so bulk edits cause one
 // reload).
-const LIVE_DOCTYPES = ['CRM Task', 'CRM Lead', 'CRM Deal', 'FCRM Note', 'Communication']
+const LIVE_DOCTYPES = [
+  'CRM Task',
+  'CRM Lead',
+  'CRM Deal',
+  'FCRM Note',
+  'Communication',
+  'Comment',
+  'CRM Call Log',
+]
 const { $socket } = globalStore()
 let reloadTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -86,15 +94,27 @@ function onVisible() {
   if (document.visibilityState === 'visible') scheduleReload()
 }
 
-onMounted(() => {
+// Rooms are dropped when the socket reconnects (e.g. after a server restart),
+// so subscribe again on every connect and catch up with a reload.
+function subscribe() {
   LIVE_DOCTYPES.forEach((dt) => $socket.emit('doctype_subscribe', dt))
+}
+function onReconnect() {
+  subscribe()
+  scheduleReload()
+}
+
+// Rooms are left joined on unmount: the Leads/Deals pages share some of them.
+onMounted(() => {
+  subscribe()
+  $socket.on('connect', onReconnect)
   $socket.on('list_update', onListUpdate)
   document.addEventListener('visibilitychange', onVisible)
 })
 onBeforeUnmount(() => {
   clearTimeout(reloadTimer)
+  $socket.off('connect', onReconnect)
   $socket.off('list_update', onListUpdate)
-  LIVE_DOCTYPES.forEach((dt) => $socket.emit('doctype_unsubscribe', dt))
   document.removeEventListener('visibilitychange', onVisible)
 })
 

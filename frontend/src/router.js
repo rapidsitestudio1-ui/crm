@@ -262,7 +262,10 @@ router.beforeEach(async (to, from, next) => {
       }
 
       const doctype = doctypeMap[to.name]
-      let defaultViewType = 'list'
+      // Custom: Leads and Deals open on Kanban unless a default view is set.
+      let defaultViewType = ['Leads', 'Deals'].includes(to.name)
+        ? 'kanban'
+        : 'list'
 
       let globalDefault = getDefaultView(to.name)
       if (globalDefault) {

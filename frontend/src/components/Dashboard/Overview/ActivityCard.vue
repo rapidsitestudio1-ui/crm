@@ -13,7 +13,13 @@
         @click="open(item)"
       >
         <span class="ov-chip size-[30px]" :style="{ background: KINDS[item.type].bg }">
-          <img :src="KINDS[item.type].icon" alt="" class="size-[14px]" />
+          <img v-if="KINDS[item.type].icon" :src="KINDS[item.type].icon" alt="" class="size-[14px]" />
+          <component
+            :is="KINDS[item.type].component"
+            v-else
+            class="size-[14px]"
+            :style="{ color: KINDS[item.type].color }"
+          />
         </span>
         <span class="flex min-w-0 flex-1 flex-col">
           <span class="truncate text-[12px] font-medium leading-[17px]">{{ __(item.title) }}</span>
@@ -43,17 +49,25 @@ import whatsappIcon from './assets/act-whatsapp.svg'
 import emailIcon from './assets/act-email.svg'
 import noteIcon from './assets/act-note.svg'
 
-type Kind = 'lead' | 'deal' | 'whatsapp' | 'email' | 'note'
+import LucideMessageSquare from '~icons/lucide/message-square'
+import LucidePhone from '~icons/lucide/phone'
+import type { Component } from 'vue'
+
+type Kind = 'lead' | 'deal' | 'whatsapp' | 'email' | 'note' | 'comment' | 'call'
 type Item = { type: Kind; title: string; subtitle: string; time: string; doctype: string; name: string }
 
 defineProps<{ items: Item[] }>()
 
-const KINDS: Record<Kind, { icon: string; bg: string }> = {
+// Figma icons for the five designed kinds; Lucide (in matching tones) for the
+// two the design doesn't cover.
+const KINDS: Record<Kind, { icon?: string; component?: Component; color?: string; bg: string }> = {
   lead: { icon: leadIcon, bg: 'var(--ov-chip-lead)' },
   deal: { icon: dealIcon, bg: 'var(--ov-chip-deal)' },
   whatsapp: { icon: whatsappIcon, bg: 'var(--ov-chip-whatsapp)' },
   email: { icon: emailIcon, bg: 'var(--ov-chip-email)' },
   note: { icon: noteIcon, bg: 'var(--ov-chip-note)' },
+  comment: { component: LucideMessageSquare, color: '#6d3fd6', bg: 'var(--ov-chip-violet)' },
+  call: { component: LucidePhone, color: '#0a8f5a', bg: 'var(--ov-chip-whatsapp)' },
 }
 
 const router = useRouter()
@@ -63,6 +77,8 @@ const TAB: Record<Kind, string> = {
   whatsapp: '#whatsapp',
   email: '#emails',
   note: '#notes',
+  comment: '#comments',
+  call: '#calls',
 }
 
 function open(item: Item) {
