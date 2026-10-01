@@ -30,7 +30,7 @@ export function useKanbanExtras(doctype, getNames, fields) {
         })
         if (id !== request) return
         for (const row of rows || []) extras[row.name] = row
-      } catch (e) {
+      } catch {
         // Cards still render from the board data; extras are optional.
       }
     },

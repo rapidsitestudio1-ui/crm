@@ -118,13 +118,13 @@
                   class="kb-card"
                   draggable="false"
                   :data-name="fields.name"
-                  @dragstart.prevent
                   v-bind="{
                     to: options.getRoute ? options.getRoute(fields) : undefined,
                     onClick: options.onClick
                       ? () => options.onClick(fields)
                       : undefined,
                   }"
+                  @dragstart.prevent
                 >
                   <slot
                     v-if="$slots['card-header']"

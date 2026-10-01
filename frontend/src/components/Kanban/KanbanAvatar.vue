@@ -14,8 +14,8 @@
       width: px + 'px',
       height: px + 'px',
       fontSize: fontPx + 'px',
-      background: tone[0],
-      color: tone[1],
+      '--av-bg': tone[0],
+      '--av-ink': tone[1],
     }"
     :title="label"
     aria-hidden="true"

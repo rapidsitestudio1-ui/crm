@@ -1462,6 +1462,13 @@ defineExpose({
   viewsDropdownOptions,
   currentView,
   updateSelections,
+  // Custom: lets a page re-query after changing its `filters` prop (sent as
+  // default_filters, never saved to the view), and clear the view's filters.
+  reload,
+  clearFilters: () => updateFilter({}),
+  hasFilters: computed(
+    () => Object.keys(listResource.params?.filters || {}).length > 0,
+  ),
 })
 
 // Watchers

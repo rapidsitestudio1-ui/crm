@@ -300,6 +300,12 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   overflow: hidden;
+  background: var(--av-bg);
+  color: var(--av-ink);
+}
+[data-theme='dark'] .kb-avatar {
+  background: color-mix(in srgb, var(--av-ink) 24%, transparent);
+  color: color-mix(in srgb, var(--av-ink) 45%, white);
 }
 
 /* ---------- Drag and drop ---------- */
