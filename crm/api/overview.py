@@ -224,14 +224,15 @@ def _reference_labels(refs: list[tuple[str, str]]) -> dict:
 
 
 def _tasks_today(user):
-	filters = {"status": ["not in", ["Done", "Canceled"]], "due_date": ["between", [nowdate(), nowdate()]]}
+	"""Open tasks: overdue first, then today, then upcoming; undated ones last."""
+	filters = {"status": ["not in", ["Done", "Canceled"]]}
 	if user:
 		filters["assigned_to"] = user
 	tasks = frappe.get_all(
 		"CRM Task",
 		filters=filters,
 		fields=["name", "title", "due_date", "status", "reference_doctype", "reference_docname"],
-		order_by="due_date asc",
+		order_by="due_date is null, due_date asc, creation desc",
 		limit=4,
 	)
 	labels = _reference_labels([(t.reference_doctype, t.reference_docname) for t in tasks])

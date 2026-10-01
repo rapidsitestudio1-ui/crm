@@ -1,10 +1,10 @@
 <template>
   <section class="ov-card flex min-w-0 flex-col px-[18px] pb-4 pt-[15px]">
-    <CardHeading :title="__('Tasks due today')" align="center">
+    <CardHeading :title="__('Upcoming tasks')" align="center">
       <ViewAllLink :to="{ name: 'Tasks' }" />
     </CardHeading>
     <div class="flex flex-col gap-[15px] pt-[14px]">
-      <p v-if="!tasks.length" class="ov-empty pl-[10px]">{{ __('No tasks due today') }}</p>
+      <p v-if="!tasks.length" class="ov-empty pl-[10px]">{{ __('No open tasks') }}</p>
       <div
         v-for="task in tasks"
         :key="task.name"
@@ -38,9 +38,13 @@
         <div class="flex pt-[2px]">
           <span
             class="rounded-[6px] px-2 py-[3px] text-[12px] leading-[18px] whitespace-nowrap"
-            style="background: var(--ov-task-bg); color: var(--ov-task-ink)"
+            :style="
+              due(task).urgent
+                ? 'background: var(--ov-task-bg); color: var(--ov-task-ink)'
+                : 'background: var(--ov-th-bg); color: var(--ov-ink-table)'
+            "
           >
-            {{ dayjsLocal(task.due_date).format('h:mm A') }}
+            {{ due(task).label }}
           </span>
         </div>
       </div>
@@ -49,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { call, dayjsLocal, toast } from 'frappe-ui'
+import { call, dayjs, dayjsLocal, toast } from 'frappe-ui'
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import CardHeading from './CardHeading.vue'
@@ -68,6 +72,21 @@ defineProps<{ tasks: Task[] }>()
 
 const router = useRouter()
 const done = reactive(new Set<string>())
+
+// Badge text and tone: red (as in Figma) for overdue and today, gray for later.
+function due(task: Task): { label: string; urgent: boolean } {
+  if (!task.due_date) return { label: __('No date'), urgent: false }
+  const d = dayjsLocal(task.due_date)
+  const today = dayjs().startOf('day')
+  const time = d.format('h:mm A')
+  if (d.isBefore(dayjs())) {
+    return { label: d.isBefore(today) ? __('Overdue') : time, urgent: true }
+  }
+  if (d.isBefore(today.add(1, 'day'))) return { label: time, urgent: true }
+  if (d.isBefore(today.add(2, 'day'))) return { label: __('Tomorrow {0}', [time]), urgent: false }
+  if (d.isBefore(today.add(7, 'day'))) return { label: d.format('ddd h:mm A'), urgent: false }
+  return { label: d.format('MMM D'), urgent: false }
+}
 
 async function markDone(task: Task) {
   if (done.has(task.name)) return

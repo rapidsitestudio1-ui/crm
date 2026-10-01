@@ -33,7 +33,8 @@
 <script setup lang="ts">
 import './overview.css'
 import { createResource, dayjs } from 'frappe-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { globalStore } from '@/stores/global'
 import MetricCard from './MetricCard.vue'
 import SalesTrendCard from './SalesTrendCard.vue'
 import PipelineForecastCard from './PipelineForecastCard.vue'
@@ -64,6 +65,38 @@ const overview = createResource({
 })
 
 watch([days, forecastMonths, () => props.user], () => overview.reload())
+
+// Live updates: Frappe emits "list_update" to everyone subscribed to a doctype
+// whenever a record of it is created, changed or deleted. Any change to a
+// doctype the dashboard reads refreshes it (debounced, so bulk edits cause one
+// reload).
+const LIVE_DOCTYPES = ['CRM Task', 'CRM Lead', 'CRM Deal', 'FCRM Note', 'Communication']
+const { $socket } = globalStore()
+let reloadTimer: ReturnType<typeof setTimeout> | undefined
+
+function scheduleReload() {
+  clearTimeout(reloadTimer)
+  reloadTimer = setTimeout(() => overview.reload(), 500)
+}
+function onListUpdate(data: { doctype?: string }) {
+  if (data?.doctype && LIVE_DOCTYPES.includes(data.doctype)) scheduleReload()
+}
+// Catch anything missed while the tab was in the background.
+function onVisible() {
+  if (document.visibilityState === 'visible') scheduleReload()
+}
+
+onMounted(() => {
+  LIVE_DOCTYPES.forEach((dt) => $socket.emit('doctype_subscribe', dt))
+  $socket.on('list_update', onListUpdate)
+  document.addEventListener('visibilitychange', onVisible)
+})
+onBeforeUnmount(() => {
+  clearTimeout(reloadTimer)
+  $socket.off('list_update', onListUpdate)
+  LIVE_DOCTYPES.forEach((dt) => $socket.emit('doctype_unsubscribe', dt))
+  document.removeEventListener('visibilitychange', onVisible)
+})
 
 const data = computed(() => overview.data)
 
